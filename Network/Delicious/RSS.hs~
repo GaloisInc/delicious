@@ -1,17 +1,4 @@
---------------------------------------------------------------------
--- |
--- Module    : 
--- Copyright : (c) Galois, Inc. 2008
--- License   : BSD3
---
--- Maintainer: Don Stewart <dons@galois.com>
--- Stability : provisional
--- Portability:
---
---------------------------------------------------------------------
-
-
-module Network.Delicious.RSS 
+module Delicious.RSS 
        ( getHotlist       -- :: IO [Post]
        , getPopular       -- :: IO [Post]
        , getRSSRecent     -- :: IO [Post]
@@ -20,7 +7,7 @@ module Network.Delicious.RSS
        , getRSSUserTag    -- :: String -> String -> IO [Post]
        ) where
 
-import Network.Delicious.Types
+import Delicious.Types
 
 import Text.Feed.Query
 import Text.Feed.Types

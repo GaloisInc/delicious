@@ -1,6 +1,6 @@
 module Main where
 
-import Delicious
+import Network.Delicious
 import System.Environment
 import System.Exit
 import Control.Monad ( when )

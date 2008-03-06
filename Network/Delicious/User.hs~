@@ -1,4 +1,4 @@
-module Network.Delicious.User 
+module Delicious.User 
        ( getLastUpdate   -- :: DM TimeString
 
        , getTags         -- :: DM [TagInfo]
@@ -8,18 +8,18 @@ module Network.Delicious.User
        , getRecent       -- :: Maybe Tag -> Maybe Integer -> DM [Post]
        , getAll          -- :: Maybe Tag -> DM [Post]
        , getByDate       -- :: Maybe Tag -> DM [(DateString,Integer)]
-
+       
        , addPost         -- :: Post -> Bool -> Bool -> DM ()
        , deletePost      -- :: URLString -> DM ()
 
        , getBundles      -- :: DM [Bundle]
        , setBundle       -- :: String -> [Tag] -> DM ()
        , deleteBundle    -- :: String -> IO ()
-
+       
        , restReq
        ) where
 
-import Network.Delicious.Types
+import Delicious.Types
 
 
 import Control.Monad
@@ -171,9 +171,9 @@ addPost ps replace shared = do
       mb "extended" (l2m $ postNotes p) $
        mb "tags" (l2m $ unwords $ postTags p) $
         mb "dt"  (l2m $ postStamp p) $
-         mb "replace" (if replace then Just "yes" else Just "no") $
-          mb "shared" (if shared then Just "yes" else Just "no") 
-             []
+	 mb "replace" (if replace then Just "yes" else Just "no") $
+	  mb "shared" (if shared then Just "yes" else Just "no") 
+	     []
   l2m "" = Nothing
   l2m xs = Just xs
 

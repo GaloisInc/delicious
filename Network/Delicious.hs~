@@ -11,13 +11,13 @@
 -- Binding to delicious tagging system
 --
 
-module Network.Delicious
-       ( module Network.Delicious.Types
-       , module Network.Delicious.User
-       , module Network.Delicious.RSS
+module Delicious
+       ( module Delicious.Types
+       , module Delicious.User
+       , module Delicious.RSS
        ) where
 
-import Network.Delicious.Types
-import Network.Delicious.User
-import Network.Delicious.RSS
+import Delicious.Types
+import Delicious.User
+import Delicious.RSS
 

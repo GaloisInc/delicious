@@ -1,17 +1,4 @@
---------------------------------------------------------------------
--- |
--- Module    : 
--- Copyright : (c) Galois, Inc. 2008
--- License   : BSD3
---
--- Maintainer: Don Stewart <dons@galois.com>
--- Stability : provisional
--- Portability:
---
---------------------------------------------------------------------
-
-
-module Network.Delicious.Types where
+module Delicious.Types where
 
 import Web.DAV.Types ( URLString )
 
@@ -19,7 +6,7 @@ type DateString = String
 type TimeString = String -- 8601
 
 data DMEnv
- = DMEnv
+ = DMEnv 
      { dmUser :: User
      , dmBase :: URLString
      }
