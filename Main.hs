@@ -13,16 +13,27 @@ main = do
   when (length ls /= 2) $ do
        putStrLn "Usage: dtest <del.icio.us username> <password>"
        exitFailure
+
   let (x:y:_) = ls
+
   let usr = User{userName=x,userPass=y}
   v <- runDelic usr base getTags
+
   print (map tagName v)
+
   v <- runDelic usr base getBundles
   mapM_ (\ b -> putStrLn (bundleName b ++ " = " ++ show (bundleTags b))) v
-  ps <- runDelic usr base (getPosts nullFilter)
+
+    ps <- runDelic usr base (getPosts nullFilter)
+    mapM_ (\ p -> putStrLn (postHref p  ++ " : " ++ show (postTags p))) ps
+
+  ps <- runDelic usr base
+            (getPosts (nullFilter{filterURL=Just "http://xmonad.org/"}))
   mapM_ (\ p -> putStrLn (postHref p  ++ " : " ++ show (postTags p))) ps
+
   ps <- runDelic usr base (getRecent Nothing (Just 100))
   mapM_ (\ p -> putStrLn (postHref p  ++ " : " ++ show (postTags p))) ps
+
   ps <- getRSSTag "haskell"
   mapM_ (\ p -> putStrLn (postHref p  ++ " : " ++ postDesc p ++ " : " ++ show (postTags p))) ps
 

@@ -11,7 +11,7 @@
 --------------------------------------------------------------------
 
 
-module Network.Delicious.RSS 
+module Network.Delicious.RSS
        ( getHotlist       -- :: IO [Post]
        , getPopular       -- :: IO [Post]
        , getRSSRecent     -- :: IO [Post]
