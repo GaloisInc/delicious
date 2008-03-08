@@ -1,4 +1,4 @@
-module Network.Delicious.User 
+module Network.Delicious.User
        ( getLastUpdate   -- :: DM TimeString
 
        , getTags         -- :: DM [TagInfo]
@@ -37,7 +37,7 @@ import Text.XML.Light as XML hiding ( findAttr )
 --
 restReq :: String -> [(String,String)] -> DM (Either XML.Element String)
 restReq cmd opts = do
-  b      <- getBase 
+  b      <- getBase
   u      <- getUser
   let effUrl = b ++ '/':cmd ++ tlOpts opts
   let (base,path) = splitURL effUrl
@@ -56,7 +56,7 @@ getLastUpdate = do
   pl <- restReq "posts/update" []
   case pl of
     Right x -> fail ("getLastUpdate: no parse -- " ++ x)
-    Left d -> 
+    Left d ->
      case find (\ (Attr a _) -> qName a == "time") (elAttribs d) of
        Just (Attr _ v) -> return v
        Nothing    -> fail (show pl)
@@ -66,35 +66,35 @@ getTags = do
   pl <- restReq "tags/get" []
   case pl of
     Right x -> fail ("getTags: no parse -- " ++ x)
-    Left d -> 
+    Left d ->
      case qName $ elName d of
        "tags" -> return (map eltToTag $ findElements (unqual "tag") d)
        _ -> fail ("renameTag: unexpected return payload " ++ show d)
  where
-  eltToTag e = 
-    TagInfo 
+  eltToTag e =
+    TagInfo
       { tagName = findAttr "tag" "" e
       , tagUses = readInt 0 $ findAttr "count" "0" e
       }
-  
+
 readInt :: Integer -> String -> Integer
-readInt d xs = 
+readInt d xs =
   case reads xs of
     ((x,_):_) -> x
     _ -> d
 
 findAttr :: String -> String -> Element -> String
-findAttr n d e = 
-  fromMaybe d $ 
-   fmap (\ (Attr _ v) -> v) $ 
+findAttr n d e =
+  fromMaybe d $
+   fmap (\ (Attr _ v) -> v) $
     find (\ (Attr a _) -> qName a == n) (elAttribs e)
 
 renameTag :: Tag -> Tag -> DM ()
 renameTag ot nt = do
-  pl <- restReq "tags/rename" [("old",ot),("new", nt)]  
+  pl <- restReq "tags/rename" [("old",ot),("new", nt)]
   case pl of
     Right x  -> fail ("renameTag: ill-formed return value -- " ++ x)
-    Left d -> 
+    Left d ->
      case qName $ elName d of
        "result" | strContent d == "done" -> return ()
        _ -> fail ("renameTag: unexpected return value " ++ show d)
@@ -107,7 +107,7 @@ getPosts' loc r f = do
   pl <- restReq r (toFilterArgs f)
   case pl of
     Right x -> fail (loc ++ ": ill-formed return value -- " ++ x)
-    Left d -> 
+    Left d ->
        case qName $ elName d of
          "posts" -> return (map eltToPost $ findElements (unqual "post") d)
          _ -> fail (loc ++ ": unexpected return payload " ++ show d)
@@ -116,13 +116,13 @@ getPosts' loc r f = do
      { postHref   = findAttr "href" "" e
      , postDesc   = findAttr "description" "" e
      , postNotes  = findAttr "extended" "" e
-     , postTags   = words $ findAttr "tag" "" e 
+     , postTags   = words $ findAttr "tag" "" e
      , postStamp  = findAttr "time" "" e
      , postHash   = findAttr "hash" "" e
      }
 
 toFilterArgs :: Filter -> [(String,String)]
-toFilterArgs f = 
+toFilterArgs f =
   mb "tag" (filterTag f) $
    mb "dt" (filterDate f) $
     mb "url" (filterURL f) []
@@ -132,7 +132,7 @@ mb _ Nothing  xs = xs
 mb t (Just v) xs = (t,v):xs
 
 getRecent  :: Maybe Tag -> Maybe Integer -> DM [Post]
-getRecent mbTg mbCount = 
+getRecent mbTg mbCount =
   getPosts' "getRecent" "posts/recent"
             nullFilter{filterTag=mbTg,filterCount=mbCount}
 
@@ -144,12 +144,12 @@ getByDate mbTg = do
   pl <- restReq "posts/dates" (toFilterArgs nullFilter{filterTag=mbTg})
   case pl of
     Right x -> fail ("getByDate: no parse -- " ++ x)
-    Left d -> 
+    Left d ->
      case qName $ elName d of
        "dates" -> return (map eltToDate $ findElements (unqual "date") d)
        _ -> fail ("getByDate: unexpected return payload " ++ show d)
  where
-  eltToDate e = 
+  eltToDate e =
     ( findAttr "date" "" e
     , readInt 0 $ findAttr "count" "0" e
     )
@@ -159,20 +159,20 @@ addPost ps replace shared = do
   pl <- restReq "posts/add" (toPostArgs ps)
   case pl of
     Right x -> fail ("addPost: ill-formed return value -- " ++ x)
-    Left d -> 
+    Left d ->
      case qName $ elName d of
-       "result" 
+       "result"
          | findAttr "code" "" d == "done" -> return ()
        _ -> fail ("addPost: unexpected return payload " ++ show d)
  where
-  toPostArgs p = 
+  toPostArgs p =
     mb "url" (l2m $ postHref p) $
      mb "description" (l2m $ postDesc p) $
       mb "extended" (l2m $ postNotes p) $
        mb "tags" (l2m $ unwords $ postTags p) $
         mb "dt"  (l2m $ postStamp p) $
          mb "replace" (if replace then Just "yes" else Just "no") $
-          mb "shared" (if shared then Just "yes" else Just "no") 
+          mb "shared" (if shared then Just "yes" else Just "no")
              []
   l2m "" = Nothing
   l2m xs = Just xs
@@ -193,7 +193,7 @@ getBundles = do
   pl <- restReq "tags/bundles/all" []
   case pl of
     Right x -> fail ("getBundles: ill-formed return value -- " ++ x)
-    Left d -> 
+    Left d ->
      case qName $ elName d of
        "bundles" -> return (map eltToBundle $ findElements (unqual "bundle") d)
        _ -> fail ("getBundles: unexpected return payload " ++ show d)

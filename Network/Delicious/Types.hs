@@ -78,12 +78,12 @@ data Filter
      }
 
 nullFilter :: Filter
-nullFilter = 
+nullFilter =
   Filter{ filterTag   = Nothing
-  	, filterDate  = Nothing
-	, filterURL   = Nothing
-	, filterCount = Nothing
-	}
+        , filterDate  = Nothing
+        , filterURL   = Nothing
+        , filterCount = Nothing
+        }
 
 data Post
  = Post
