@@ -1,25 +1,33 @@
-Name:            delicious
-Version:         0.1.0
-Synopsis:        Accessing the del.icio.us API from Haskell
-Description:     Haskell binding to del.icio.us API
+name:            delicious
+version:         0.2.0
+homepage:        http://galois.com
+synopsis:        Accessing the del.icio.us APIs from Haskell
+description:     Access to the del.icio.us social tagging site's API from Haskell.
 category:        Web
-License:         BSD3
+license:         BSD3
 license-file:    LICENSE
 author:          sof@galois.com
 maintainer:      sof@galois.com
 copyright:       (c) 2008 Galois, Inc.
-Build-Depends:   base,
-                 xml       >= 1.2.6,
-                 feed,
-                 webclient >= 0.2
-Build-type:      Simple
-Ghc-Options:     -Wall
-Exposed-Modules: 
-  Network.Delicious.Types,
-  Network.Delicious.User,
-  Network.Delicious.RSS,
-  Network.Delicious
+cabal-version:   >= 1.2
+build-type:      Simple
 
-Executable: dtest
-Main-is: Main.hs
-Other-Modules: Network.Delicious
+library
+    exposed-modules: 
+      Network.Delicious.Types,
+      Network.Delicious.User,
+      Network.Delicious.RSS,
+      Network.Delicious.JSON,
+      Network.Delicious
+
+    build-depends:   base,
+                     xml       >= 1.2.6,
+                     feed      >= 0.3.1,
+                     webclient >= 0.2,
+                     json      >= 0.3.2,
+                     nano-md5  >= 0.1.1
+
+    ghc-options:     -Wall
+
+-- Executable:     dtest
+-- Main-is:        Main.hs
