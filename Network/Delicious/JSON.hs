@@ -48,7 +48,7 @@ import Web.DAV.Client.Curl
 -- >                           ,("programming",25)
 -- >                           ,("opensource",23)
 -- >                           ,("xmonad",20)]
--- >                   ,url = "http://xmonad.org/"})
+-- >                   }
 --
 getURLDetails :: String -> IO (Either String URLDetails)
 getURLDetails url = do
@@ -70,16 +70,15 @@ hashURL url = md5sum (S.pack (clean url))
 -- | A structure represening the the delicious tags associated with a url.
 data URLDetails =
         URLDetails { total :: !Integer
-                   , tags  :: [(String,Integer)]
-                   , url   :: String }
+                   , tags  :: [(String,Integer)] }
         deriving (Eq,Show,Read)
 
 -- | Compose and decompose URLDetails as JSON in the form delicious uses.
 instance JSON URLDetails where
-    showJSON (URLDetails total tags url) =
+{-
+    showJSON (URLDetails total tags) =
         JSArray . return . JSObject $ toJSObject
                     [ ("hash",            showJSON (JSONString (hashURL url)))
-                    , ("url",             showJSON (JSONString url))
                     , ("total_posts",     showJSON total)
                     , ("top_tags",        JSObject
                                                 (toJSObject
@@ -87,7 +86,9 @@ instance JSON URLDetails where
                                                 )
                       )
                    ]
+-}
 
+    readJSON (JSArray []) = return (URLDetails 0 [])
     readJSON (JSArray [JSObject (JSONObject pairs)])
         = do the_tags <- case lookup "top_tags" pairs of
                         Nothing -> fail "Network.Delicious.JSON: Missing JSON field: top_tags"
@@ -99,13 +100,13 @@ instance JSON URLDetails where
                         Nothing -> fail "Network.Delicious.JSON: Missing JSON field: total_posts"
                         Just  n -> readJSON n
 
-             the_url <- case lookup "url" pairs of
-                        Nothing -> fail "Network.Delicious.JSON: Missing JSON field: url"
-                        Just  n -> readJSON n
+         --  the_url <- case lookup "url" pairs of
+         --             Nothing -> fail "Network.Delicious.JSON: Missing JSON field: url"
+         --             Just  n -> readJSON n
 
              return $
                 URLDetails { total = the_total
-                           , tags  = the_tags
-                           , url   = the_url }
+                           , tags  = the_tags }
+                       --  , url   = the_url }
 
     readJSON s = fail ("Network.Delicious.JSON: url details malformed: "++ show s)
