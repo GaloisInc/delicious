@@ -11,7 +11,34 @@
 --------------------------------------------------------------------
 
 
-module Network.Delicious.Types where
+module Network.Delicious.Types 
+       ( DateString
+       , TimeString
+       , URLString
+
+       , User(..)
+       , nullUser
+       
+       , DM
+       , withUser -- :: User -> DM a -> DM a
+       , getUser  -- :: DM User
+       , getBase  -- :: DM URLString
+
+       , liftIO   -- :: IO a -> DM a
+       , runDelic -- :: User -> URLString -> DM a -> IO a
+       , runDM    -- :: User -> DM a -> IO a
+       
+       , Tag
+       , TagInfo(..)
+       , Bundle(..)
+
+       , Filter(..)
+       , nullFilter
+       
+       , Post(..)
+       , nullPost
+       
+       ) where
 
 import Web.DAV.Types ( URLString )
 
@@ -28,7 +55,13 @@ data User
  = User
      { userName :: String
      , userPass :: String
-     }
+     } deriving ( Show )
+
+nullUser :: User
+nullUser  
+ = User { userName = ""
+        , userPass = ""
+	}
 
 newtype DM a = DM {unDM :: DMEnv -> IO a}
 
@@ -53,6 +86,12 @@ liftIO a = DM $ \ _ -> a
 runDelic :: User -> URLString -> DM a -> IO a
 runDelic u b dm = (unDM dm) DMEnv{dmUser=u,dmBase=b}
 
+del_base :: URLString
+del_base = "https://api.del.icio.us/v1"
+
+runDM :: User -> DM a -> IO a
+runDM user a = runDelic user del_base a
+
 -- 
 
 type Tag = String
@@ -61,13 +100,13 @@ data TagInfo
  = TagInfo
      { tagName :: Tag
      , tagUses :: Integer
-     }
+     } deriving ( Show )
 
 data Bundle
  = Bundle
      { bundleName :: String
      , bundleTags :: [Tag]
-     }
+     } deriving ( Show )
 
 data Filter
  = Filter
@@ -75,7 +114,7 @@ data Filter
      , filterDate  :: Maybe DateString
      , filterURL   :: Maybe URLString
      , filterCount :: Maybe Integer
-     }
+     } deriving ( Show )
 
 nullFilter :: Filter
 nullFilter =
@@ -93,7 +132,7 @@ data Post
      , postTags   :: [Tag]
      , postStamp  :: DateString
      , postHash   :: String
-     }
+     } deriving ( Show )
 
 nullPost :: Post
 nullPost = Post
