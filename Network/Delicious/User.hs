@@ -3,10 +3,12 @@ module Network.Delicious.User
 
        , getTags         -- :: DM [TagInfo]
        , renameTag       -- :: Tag -> Tag -> DM ()
+       , deleteTag       -- :: Tag -> DM ()
        , getPosts        -- :: Filter -> DM [Post]
 
        , getRecent       -- :: Maybe Tag -> Maybe Integer -> DM [Post]
        , getAll          -- :: Maybe Tag -> DM [Post]
+       , getAllHashes    -- :: DM [Post]
        , getByDate       -- :: Maybe Tag -> DM [(DateString,Integer)]
 
        , addPost         -- :: Post -> Bool -> Bool -> DM ()
@@ -69,7 +71,7 @@ getTags = do
     Left d ->
      case qName $ elName d of
        "tags" -> return (map eltToTag $ findElements (unqual "tag") d)
-       _ -> fail ("renameTag: unexpected return payload " ++ show d)
+       _ -> fail ("getTags: unexpected return payload " ++ show d)
  where
   eltToTag e =
     TagInfo
@@ -98,6 +100,17 @@ renameTag ot nt = do
      case qName $ elName d of
        "result" | strContent d == "done" -> return ()
        _ -> fail ("renameTag: unexpected return value " ++ show d)
+
+deleteTag :: Tag -> DM ()
+deleteTag dt = do
+  pl <- restReq "tags/delete" [("tag",dt)]
+  case pl of
+    Right x -> fail ("deleteTag: ill-formed return value -- " ++ x)
+    Left d  ->
+     case qName $ elName d of
+       "result" | strContent d == "done" -> return ()
+       _ -> fail ("deleteTag: unexpected return value " ++ show d)
+
 
 getPosts :: Filter -> DM [Post]
 getPosts f = getPosts' "getPosts" "posts/get" f
@@ -138,6 +151,9 @@ getRecent mbTg mbCount =
 
 getAll :: Maybe Tag -> DM [Post]
 getAll mbTg = getPosts' "getAll" "posts/all" nullFilter{filterTag=mbTg}
+
+getAllHashes :: DM [Post]
+getAllHashes = getPosts' "getAll" "posts/all?hashes" nullFilter
 
 getByDate  :: Maybe Tag -> DM [(DateString,Integer)]
 getByDate mbTg = do

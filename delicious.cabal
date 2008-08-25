@@ -1,5 +1,5 @@
 name:            delicious
-version:         0.2.0
+version:         0.2.1
 homepage:        http://galois.com
 synopsis:        Accessing the del.icio.us APIs from Haskell
 description:     Access to the del.icio.us social tagging site's API from Haskell.
