@@ -20,9 +20,11 @@ module Network.Delicious.Types
        , nullUser
        
        , DM
-       , withUser -- :: User -> DM a -> DM a
-       , getUser  -- :: DM User
-       , getBase  -- :: DM URLString
+       , withUser  -- :: User -> DM a -> DM a
+       , withCount -- :: Int -> DM a -> DM a
+       , getUser   -- :: DM User
+       , getBase   -- :: DM URLString
+       , getCount  -- :: DM (Maybe Int)
 
        , liftIO   -- :: IO a -> DM a
        , runDelic -- :: User -> URLString -> DM a -> IO a
@@ -47,8 +49,9 @@ type TimeString = String -- 8601
 
 data DMEnv
  = DMEnv
-     { dmUser :: User
-     , dmBase :: URLString
+     { dmUser  :: User
+     , dmBase  :: URLString
+     , dmCount :: Maybe Int
      }
 
 data User
@@ -58,7 +61,7 @@ data User
      } deriving ( Show )
 
 nullUser :: User
-nullUser  
+nullUser
  = User { userName = ""
         , userPass = ""
 	}
@@ -74,8 +77,14 @@ instance Monad DM where
 withUser :: User -> DM a -> DM a
 withUser u k = DM $ \ env -> (unDM k) env{dmUser=u}
 
+withCount :: Int -> DM a -> DM a
+withCount c k = DM $ \ env -> (unDM k) env{dmCount=Just c}
+
 getUser :: DM User
 getUser = DM $ \ env -> return (dmUser env)
+
+getCount :: DM (Maybe Int)
+getCount = DM $ \ env -> return (dmCount env)
 
 getBase :: DM URLString
 getBase = DM $ \ env -> return (dmBase env)
@@ -84,7 +93,7 @@ liftIO :: IO a -> DM a
 liftIO a = DM $ \ _ -> a
 
 runDelic :: User -> URLString -> DM a -> IO a
-runDelic u b dm = (unDM dm) DMEnv{dmUser=u,dmBase=b}
+runDelic u b dm = (unDM dm) DMEnv{dmUser=u,dmBase=b,dmCount=Nothing}
 
 del_base :: URLString
 del_base = "https://api.del.icio.us/v1"
