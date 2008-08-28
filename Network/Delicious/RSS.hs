@@ -31,7 +31,9 @@ module Network.Delicious.RSS
        , getNetworkMembers      -- :: String -> IO [Post]
        , getNetworkFans         -- :: String -> IO [Post]
        , getURLBookmarks        -- :: URLString -> IO [Post]
+{-
        , getURLSummary          -- :: URLString -> IO [Post]
+-}
        ) where
 
 import Network.Delicious.Types
@@ -225,12 +227,14 @@ getURLBookmarks url = do
     Nothing -> fail ("getURLBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
+{- Not on offer for RSS backend:
 getURLSummary :: URLString -> IO [Post]
 getURLSummary url = do
   ls <- readContentsURL (b_urlinfo_url ++ md5sumStr url)
   case parseFeedString ls of
     Nothing -> fail ("getURLSummary: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
+-}
 
 toPost :: Item -> Post
 toPost i = 
