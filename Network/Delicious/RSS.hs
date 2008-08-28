@@ -91,8 +91,10 @@ network_fans_url    = deli_base ++ "/rss/networkfans/"
 b_url_url    :: {-URL-}String
 b_url_url    = deli_base ++ "/rss/url/"
 
+{- UNUSED:
 b_urlinfo_url :: {-URL-}String
 b_urlinfo_url = deli_base ++ "/rss/urlinfo/"
+-}
 
 getHotlist :: IO [Post]
 getHotlist = do

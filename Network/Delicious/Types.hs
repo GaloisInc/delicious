@@ -43,6 +43,11 @@ module Network.Delicious.Types
        ) where
 
 import Web.DAV.Types ( URLString )
+import Data.Maybe ( catMaybes )
+
+import Text.JSON.Types
+import Text.JSON
+
 
 type DateString = String
 type TimeString = String -- 8601
@@ -152,4 +157,47 @@ nullPost = Post
      , postStamp  = ""
      , postHash   = ""
      }
+
+
+instance JSON Post where
+    showJSON p = JSObject $ toJSObject $ catMaybes
+        [ Just ("u",       showJSON (JSONString (postHref p)))
+	, mb "d"          (showJSON.JSONString) (postDesc p)
+	, mb "n"          (showJSON.JSONString) (postNotes p)
+	, mb "dt"         (showJSON.JSONString) (postStamp p)
+	, Just ("t",      JSArray (map (showJSON.JSONString) (postTags p)))
+	]
+     where
+      mb _ _ "" = Nothing
+      mb t f xs = Just (t, f xs)
+
+    readJSON (JSArray []) = return nullPost
+    readJSON (JSArray [x]) = readJSON x
+    readJSON (JSObject (JSONObject pairs))
+        = do tgs <- case lookup "t" pairs of
+                     Just n -> readJSON n
+                     Nothing -> return []
+             ur  <- case lookup "u" pairs of
+                        Nothing -> fail "Network.Delicious.JSON: Missing required JSON field: url"
+                        Just  n -> readJSON n
+
+             notes <- case lookup "n" pairs of
+                        Nothing -> return ""
+                        Just  n -> readJSON n
+             desc <- case lookup "d" pairs of
+                        Nothing -> return ""
+                        Just  n -> readJSON n
+             ts <- case lookup "dt" pairs of
+                        Nothing -> return ""
+                        Just  n -> readJSON n
+
+             return $ nullPost{ postHref=ur
+	                      , postDesc=desc
+			      , postNotes=notes
+			      , postTags=tgs
+			      , postStamp=ts
+			      }
+
+    readJSON s = fail ("Network.Delicious.JSON: malformed post: "++ show s)
+
 

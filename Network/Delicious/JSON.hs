@@ -39,6 +39,8 @@ module Network.Delicious.JSON
        , getURLBookmarks        -- :: URLString -> IO [Post]
        , getURLSummary          -- :: URLString -> IO URLDetails
        , getURLDetails          -- :: URLString -> IO URLDetails
+
+       , URLDetails(..)
        ) where
 
 import Text.JSON
@@ -77,7 +79,7 @@ import Web.DAV.Client.Curl
 -- >                   }
 --
 getURLDetails :: String -> IO URLDetails
-getURLDetails url = getURLSummary url
+getURLDetails uarl = getURLSummary uarl
 
 baseUrl :: String
 baseUrl = "http://feeds.delicious.com/v2/json"
@@ -88,8 +90,8 @@ getHotlist :: IO [Post]
 getHotlist = do
     s <- readContentsURL hot_url
     case decodeStrict s of
-      Ok s    -> return s
-      Error s -> ioError $ userError ("getHotlist: " ++ s)
+      Ok e    -> return e
+      Error e -> ioError $ userError ("getHotlist: " ++ e)
 
   where hot_url = baseUrl
 
@@ -97,24 +99,24 @@ getRecentBookmarks :: IO [Post]
 getRecentBookmarks = do
     s <- readContentsURL rec_url
     case decodeStrict s of
-      Ok s    -> return s
-      Error s -> ioError $ userError ("getRecent: " ++ s)
+      Ok e    -> return e
+      Error e -> ioError $ userError ("getRecent: " ++ e)
 
   where rec_url = baseUrl ++ "/recent"
 
 getTagBookmarks :: Tag -> IO [Post]
 getTagBookmarks tg = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getTagBookmarks: " ++ s)
+      Error e -> ioError $ userError ("getTagBookmarks: " ++ e)
 
   where eff_url = baseUrl ++ "/tag/" ++ tg
 
 getTagsBookmarks    :: [Tag] -> IO [Post]
 getTagsBookmarks tgs = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getTagsBookmarks: " ++ s)
 
@@ -122,8 +124,8 @@ getTagsBookmarks tgs = do
 
 getPopularBookmarks :: IO [Post]
 getPopularBookmarks = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getPopularBookmarks: " ++ s)
 
@@ -131,8 +133,8 @@ getPopularBookmarks = do
 
 getTagPopularBookmarks :: Tag -> IO [Post]
 getTagPopularBookmarks tg = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getTagPopularBookmarks: " ++ s)
 
@@ -140,8 +142,8 @@ getTagPopularBookmarks tg = do
 
 getSiteAlerts       :: IO [Post]
 getSiteAlerts = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getTagPopularBookmarks: " ++ s)
 
@@ -149,8 +151,8 @@ getSiteAlerts = do
 
 getUserBookmarks    :: String -> IO [Post]
 getUserBookmarks usr = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getUserBookmarks: " ++ s)
 
@@ -158,8 +160,8 @@ getUserBookmarks usr = do
 
 getUserTagBookmarks :: String -> Tag -> IO [Post]
 getUserTagBookmarks usr tg = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getUserTagBookmarks: " ++ s)
 
@@ -167,8 +169,8 @@ getUserTagBookmarks usr tg = do
 
 getUserTaggedBookmarks :: String -> [Tag] -> IO [Post]
 getUserTaggedBookmarks usr tgs = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getUserTaggedBookmarks: " ++ s)
 
@@ -176,8 +178,8 @@ getUserTaggedBookmarks usr tgs = do
 
 getUserInfo :: String -> IO [Post]
 getUserInfo usr = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getUserInfo: " ++ s)
 
@@ -185,8 +187,8 @@ getUserInfo usr = do
 
 getUserPublicTags      :: String -> IO [Post]
 getUserPublicTags usr = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getUserPublicTags: " ++ s)
 
@@ -195,8 +197,8 @@ getUserPublicTags usr = do
 
 getUserSubscriptions   :: String -> IO [Post]
 getUserSubscriptions usr = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getUserSubscriptions: " ++ s)
 
@@ -204,8 +206,8 @@ getUserSubscriptions usr = do
 
 getUserInboxBookmarks  :: String -> String -> IO [Post]
 getUserInboxBookmarks usr k = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getUserInboxBookmarks: " ++ s)
 
@@ -213,8 +215,8 @@ getUserInboxBookmarks usr k = do
 
 getNetworkMemberBookmarks :: String -> IO [Post]
 getNetworkMemberBookmarks usr = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getNetworkMemberBookmarks: " ++ s)
 
@@ -222,8 +224,8 @@ getNetworkMemberBookmarks usr = do
 
 getNetworkMemberTaggedBookmarks :: String -> [Tag] -> IO [Post]
 getNetworkMemberTaggedBookmarks usr tgs = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getNetworkMemberTaggedBookmarks: " ++ s)
 
@@ -232,8 +234,8 @@ getNetworkMemberTaggedBookmarks usr tgs = do
 
 getNetworkMembers :: String -> IO [Post]
 getNetworkMembers usr = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getNetworkMembers: " ++ s)
 
@@ -241,56 +243,61 @@ getNetworkMembers usr = do
 
 getNetworkFans         :: String -> IO [Post]
 getNetworkFans usr = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getNetworkFans: " ++ s)
 
   where eff_url = baseUrl ++ "/networkfans/" ++ usr
 
 getURLBookmarks  :: URLString -> IO [Post]
-getURLBookmarks url = do
-    s <- readContentsURL eff_url
-    case decodeStrict s of
+getURLBookmarks turl = do
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getURLBookmarks: " ++ s)
 
-  where eff_url = baseUrl ++ "/url/" ++ md5sumStr url
+  where eff_url = baseUrl ++ "/url/" ++ md5sumStr turl
 
-getURLSummary          :: URLString -> IO URLDetails
-getURLSummary url = do
-    s <- readContentsURL eff_url
-    print s
-    case decodeStrict s of
+getURLSummary :: URLString -> IO URLDetails
+getURLSummary turl = do
+    ls <- readContentsURL eff_url
+    case decodeStrict ls of
       Ok s    -> return s
       Error s -> ioError $ userError ("getURLSummary: " ++ s)
 
-  where eff_url = baseUrl ++ "/urlinfo/" ++ md5sumStr url
+  where eff_url = baseUrl ++ "/urlinfo/" ++ md5sumStr turl
 
 ------------------------------------------------------------------------
 
 -- | A structure represening the the delicious tags associated with a url.
 data URLDetails =
         URLDetails { total :: !Integer
-                   , tags  :: [(String,Integer)] }
+                   , tags  :: [(String,Integer)]
+		   , hash  :: String {-MD5-}
+		   , url   :: String {-URL-}
+		   }
         deriving (Eq,Show,Read)
+
+nullURLDetails :: URLDetails
+nullURLDetails = 
+  URLDetails { total = 0
+             , tags  = []
+	     , hash  = ""
+	     , url   = ""
+	     }
 
 -- | Compose and decompose URLDetails as JSON in the form delicious uses.
 instance JSON URLDetails where
-{-
-    showJSON (URLDetails total tags) =
-        JSArray . return . JSObject $ toJSObject
-                    [ ("hash",            showJSON (JSONString (hashURL url)))
-                    , ("total_posts",     showJSON total)
-                    , ("top_tags",        JSObject
-                                                (toJSObject
-                                                    [(x,showJSON y) | (x,y) <- tags ]
-                                                )
-                      )
-                   ]
--}
+    showJSON ud = JSObject $ toJSObject
+        [ ("hash",        showJSON (JSONString (hash ud)))
+        , ("total_posts", showJSON (total ud))
+        , ("top_tags",    JSObject $ toJSObject
+                            [(x,showJSON y) | (x,y) <- tags ud ])
+        , ("url",         showJSON (JSONString (url ud)))
+        ]
 
-    readJSON (JSArray []) = return (URLDetails 0 [])
+    readJSON (JSArray []) = return nullURLDetails
     readJSON (JSArray [x]) = readJSON x
     readJSON (JSObject (JSONObject pairs))
         = do the_tags <- case lookup "top_tags" pairs of
@@ -298,52 +305,23 @@ instance JSON URLDetails where
                         Just (JSObject (JSONObject obj)) ->
                           liftM (reverse . sortBy (comparing snd)) $
                             mapM (\(x,y) -> readJSON y >>= \y' -> return (x,y')) obj
+                        Just x -> 
+			  fail ("Network.Delicious.JSON: Unexpected JSON value for 'top_tags': " ++ show x)
 
              the_total <- case lookup "total_posts" pairs of
                         Nothing -> fail "Network.Delicious.JSON: Missing JSON field: total_posts"
                         Just  n -> readJSON n
 
-         --  the_url <- case lookup "url" pairs of
-         --             Nothing -> fail "Network.Delicious.JSON: Missing JSON field: url"
-         --             Just  n -> readJSON n
+             the_url <- case lookup "url" pairs of
+                         Nothing -> fail "Network.Delicious.JSON: Missing JSON field: url"
+                         Just  n -> readJSON n
 
+             hsh     <- readJSON (fromMaybe JSNull (lookup "hash" pairs))
              return $
                 URLDetails { total = the_total
-                           , tags  = the_tags }
-                       --  , url   = the_url }
+                           , url   = the_url
+                           , tags  = the_tags
+			   , hash  = hsh
+			   }
 
     readJSON s = fail ("Network.Delicious.JSON: url details malformed: "++ show s)
-
-instance JSON Post where
---    showJSON p = ...
-
-    readJSON (JSArray []) = return nullPost
-    readJSON (JSArray [x]) = readJSON x
-    readJSON (JSObject (JSONObject pairs))
-        = do tags <- case lookup "t" pairs of
-                       Just n -> readJSON n
-                       Nothing -> return []
-             url <- case lookup "u" pairs of
-                        Nothing -> fail "Network.Delicious.JSON: Missing JSON field: url"
-                        Just  n -> readJSON n
-
-             notes <- case lookup "n" pairs of
-                        Nothing -> return ""
-                        Just  n -> readJSON n
-             desc <- case lookup "d" pairs of
-                        Nothing -> return ""
-                        Just  n -> readJSON n
-             ts <- case lookup "dt" pairs of
-                        Nothing -> return ""
-                        Just  n -> readJSON n
-
-             return $ nullPost{ postHref=url
-	                      , postDesc=desc
-			      , postNotes=notes
-			      , postTags=tags
-			      , postStamp=ts
-			      }
-
-    readJSON s = fail ("Network.Delicious.JSON: malformed post: "++ show s)
-
-
