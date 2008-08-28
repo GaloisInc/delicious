@@ -21,7 +21,6 @@ module Network.Delicious.JSON
        ( getHotlist          -- :: IO [Post]
        , getRecentBookmarks  -- :: IO [Post]
        , getTagBookmarks     -- :: Tag -> IO [Post]
-{-
        , getTagsBookmarks    -- :: [Tag] -> IO [Post]
        , getPopularBookmarks -- :: IO [Post]
        , getTagPopularBookmarks -- :: Tag -> IO [Post]
@@ -38,8 +37,8 @@ module Network.Delicious.JSON
        , getNetworkMembers      -- :: String -> IO [Post]
        , getNetworkFans         -- :: String -> IO [Post]
        , getURLBookmarks        -- :: URLString -> IO [Post]
-       , getURLSummary          -- :: URLString -> IO [Post]
--}
+       , getURLSummary          -- :: URLString -> IO URLDetails
+       , getURLDetails          -- :: URLString -> IO URLDetails
        ) where
 
 import Text.JSON
@@ -52,9 +51,8 @@ import Data.List
 import Data.Ord
 import Data.Char
 import Data.Maybe
-
-import Data.Digest.OpenSSL.MD5
-import qualified Data.ByteString.Char8 as S
+ 
+import Web.MIME.MD5 (md5sumStr)
 import Web.DAV.Client.Curl
 
 ------------------------------------------------------------------------
@@ -62,9 +60,9 @@ import Web.DAV.Client.Curl
 -- | Retrieve tags associated with a url from delicious. 
 -- An example, extract the tags associated with 'xmonad':
 --
--- > > getURLDetails "http://xmonad.org/"
+-- > > getURLSummary "http://xmonad.org/"
 -- >
--- > Right (URLDetails {total = 283
+-- >       (URLDetails {total = 283
 -- >                   ,tags = [("haskell",176)
 -- >                           ,("windowmanager",133)
 -- >                           ,("x11",126)
@@ -78,21 +76,11 @@ import Web.DAV.Client.Curl
 -- >                           ,("xmonad",20)]
 -- >                   }
 --
-getURLDetails :: String -> IO (Either String URLDetails)
-getURLDetails url = do
-    s <- readContentsURL final_url
-    return $ case decodeStrict s of
-        Ok s    -> Right s
-        Error s -> Left s
-
-  where final_url = baseUrl ++ (hashURL url)
+getURLDetails :: String -> IO URLDetails
+getURLDetails url = getURLSummary url
 
 baseUrl :: String
---baseUrl = "http://badges.del.icio.us/feeds/json/url/data?hash="
 baseUrl = "http://feeds.delicious.com/v2/json"
-
-hashURL url = md5sum (S.pack (clean url))
-      where clean    = let f = reverse . dropWhile isSpace in f . f
 
 ------------------------------------------------------------------------
 
@@ -142,35 +130,142 @@ getPopularBookmarks = do
   where eff_url = baseUrl ++ "/popular"
 
 getTagPopularBookmarks :: Tag -> IO [Post]
-getTagPopularBookmarks = undefined
+getTagPopularBookmarks tg = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getTagPopularBookmarks: " ++ s)
+
+  where eff_url = baseUrl ++ "/popular/" ++ tg
+
 getSiteAlerts       :: IO [Post]
-getSiteAlerts = undefined
+getSiteAlerts = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getTagPopularBookmarks: " ++ s)
+
+  where eff_url = baseUrl ++ "/alerts"
+
 getUserBookmarks    :: String -> IO [Post]
-getUserBookmarks = undefined
+getUserBookmarks usr = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getUserBookmarks: " ++ s)
+
+  where eff_url = baseUrl ++ '/':usr
+
 getUserTagBookmarks :: String -> Tag -> IO [Post]
-getUserTagBookmarks = undefined
+getUserTagBookmarks usr tg = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getUserTagBookmarks: " ++ s)
+
+  where eff_url = baseUrl ++ '/':usr++'/':tg
+
 getUserTaggedBookmarks :: String -> [Tag] -> IO [Post]
-getUserTaggedBookmarks = undefined
-getUserInfo            :: String -> IO [Post]
-getUserInfo = undefined
+getUserTaggedBookmarks usr tgs = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getUserTaggedBookmarks: " ++ s)
+
+  where eff_url = baseUrl ++ '/':usr++'/':concat (intersperse "+" tgs)
+
+getUserInfo :: String -> IO [Post]
+getUserInfo usr = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getUserInfo: " ++ s)
+
+  where eff_url = baseUrl ++ "/userinfo/" ++ usr
+
 getUserPublicTags      :: String -> IO [Post]
-getUserPublicTags = undefined
+getUserPublicTags usr = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getUserPublicTags: " ++ s)
+
+  where eff_url = baseUrl ++ "/tags/" ++ usr
+
+
 getUserSubscriptions   :: String -> IO [Post]
-getUserSubscriptions = undefined
+getUserSubscriptions usr = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getUserSubscriptions: " ++ s)
+
+  where eff_url = baseUrl ++ "/subscriptions/" ++ usr
+
 getUserInboxBookmarks  :: String -> String -> IO [Post]
-getUserInboxBookmarks = undefined
+getUserInboxBookmarks usr k = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getUserInboxBookmarks: " ++ s)
+
+  where eff_url = baseUrl ++ "/inbox/" ++ usr ++ "?private="++k
+
 getNetworkMemberBookmarks :: String -> IO [Post]
-getNetworkMemberBookmarks = undefined
+getNetworkMemberBookmarks usr = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getNetworkMemberBookmarks: " ++ s)
+
+  where eff_url = baseUrl ++ "/network/" ++ usr
+
 getNetworkMemberTaggedBookmarks :: String -> [Tag] -> IO [Post]
-getNetworkMemberTaggedBookmarks = undefined
-getNetworkMembers      :: String -> IO [Post]
-getNetworkMembers = undefined
+getNetworkMemberTaggedBookmarks usr tgs = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getNetworkMemberTaggedBookmarks: " ++ s)
+
+  where eff_url = baseUrl ++ "/network/" ++ usr ++ '/':concat (intersperse "+" tgs)
+
+
+getNetworkMembers :: String -> IO [Post]
+getNetworkMembers usr = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getNetworkMembers: " ++ s)
+
+  where eff_url = baseUrl ++ "/networkmembers/" ++ usr
+
 getNetworkFans         :: String -> IO [Post]
-getNetworkFans = undefined
-getURLBookmarks        :: URLString -> IO [Post]
-getURLBookmarks = undefined
-getURLSummary          :: URLString -> IO [Post]
-getURLSummary = undefined
+getNetworkFans usr = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getNetworkFans: " ++ s)
+
+  where eff_url = baseUrl ++ "/networkfans/" ++ usr
+
+getURLBookmarks  :: URLString -> IO [Post]
+getURLBookmarks url = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getURLBookmarks: " ++ s)
+
+  where eff_url = baseUrl ++ "/url/" ++ md5sumStr url
+
+getURLSummary          :: URLString -> IO URLDetails
+getURLSummary url = do
+    s <- readContentsURL eff_url
+    print s
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getURLSummary: " ++ s)
+
+  where eff_url = baseUrl ++ "/urlinfo/" ++ md5sumStr url
 
 ------------------------------------------------------------------------
 
@@ -196,7 +291,8 @@ instance JSON URLDetails where
 -}
 
     readJSON (JSArray []) = return (URLDetails 0 [])
-    readJSON (JSArray [JSObject (JSONObject pairs)])
+    readJSON (JSArray [x]) = readJSON x
+    readJSON (JSObject (JSONObject pairs))
         = do the_tags <- case lookup "top_tags" pairs of
                         Nothing -> fail "Network.Delicious.JSON: Missing JSON field: top_tags"
                         Just (JSObject (JSONObject obj)) ->
@@ -222,6 +318,7 @@ instance JSON Post where
 --    showJSON p = ...
 
     readJSON (JSArray []) = return nullPost
+    readJSON (JSArray [x]) = readJSON x
     readJSON (JSObject (JSONObject pairs))
         = do tags <- case lookup "t" pairs of
                        Just n -> readJSON n
