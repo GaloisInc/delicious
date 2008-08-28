@@ -17,14 +17,42 @@
 -- browser-based presentation styles."
 --
 
-module Network.Delicious.JSON where
+module Network.Delicious.JSON 
+       ( getHotlist          -- :: IO [Post]
+       , getRecentBookmarks  -- :: IO [Post]
+       , getTagBookmarks     -- :: Tag -> IO [Post]
+{-
+       , getTagsBookmarks    -- :: [Tag] -> IO [Post]
+       , getPopularBookmarks -- :: IO [Post]
+       , getTagPopularBookmarks -- :: Tag -> IO [Post]
+       , getSiteAlerts       -- :: IO [Post]
+       , getUserBookmarks    -- :: String -> IO [Post]
+       , getUserTagBookmarks -- :: String -> Tag -> IO [Post]
+       , getUserTaggedBookmarks -- :: String -> [Tag] -> IO [Post]
+       , getUserInfo            -- :: String -> IO [Post]
+       , getUserPublicTags      -- :: String -> IO [Post]
+       , getUserSubscriptions   -- :: String -> IO [Post]
+       , getUserInboxBookmarks  -- :: String -> String -> IO [Post]
+       , getNetworkMemberBookmarks -- :: String -> IO [Post]
+       , getNetworkMemberTaggedBookmarks -- :: String -> [Tag] -> IO [Post]
+       , getNetworkMembers      -- :: String -> IO [Post]
+       , getNetworkFans         -- :: String -> IO [Post]
+       , getURLBookmarks        -- :: URLString -> IO [Post]
+       , getURLSummary          -- :: URLString -> IO [Post]
+-}
+       ) where
 
 import Text.JSON
 import Text.JSON.Types
+
+import Network.Delicious.Types
+
 import Control.Monad
 import Data.List
 import Data.Ord
 import Data.Char
+import Data.Maybe
+
 import Data.Digest.OpenSSL.MD5
 import qualified Data.ByteString.Char8 as S
 import Web.DAV.Client.Curl
@@ -60,10 +88,89 @@ getURLDetails url = do
   where final_url = baseUrl ++ (hashURL url)
 
 baseUrl :: String
-baseUrl = "http://badges.del.icio.us/feeds/json/url/data?hash="
+--baseUrl = "http://badges.del.icio.us/feeds/json/url/data?hash="
+baseUrl = "http://feeds.delicious.com/v2/json"
 
 hashURL url = md5sum (S.pack (clean url))
       where clean    = let f = reverse . dropWhile isSpace in f . f
+
+------------------------------------------------------------------------
+
+getHotlist :: IO [Post]
+getHotlist = do
+    s <- readContentsURL hot_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getHotlist: " ++ s)
+
+  where hot_url = baseUrl
+
+getRecentBookmarks :: IO [Post]
+getRecentBookmarks = do
+    s <- readContentsURL rec_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getRecent: " ++ s)
+
+  where rec_url = baseUrl ++ "/recent"
+
+getTagBookmarks :: Tag -> IO [Post]
+getTagBookmarks tg = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getTagBookmarks: " ++ s)
+
+  where eff_url = baseUrl ++ "/tag/" ++ tg
+
+getTagsBookmarks    :: [Tag] -> IO [Post]
+getTagsBookmarks tgs = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getTagsBookmarks: " ++ s)
+
+  where eff_url = baseUrl ++ "/tag/" ++ concat (intersperse "+" tgs)
+
+getPopularBookmarks :: IO [Post]
+getPopularBookmarks = do
+    s <- readContentsURL eff_url
+    case decodeStrict s of
+      Ok s    -> return s
+      Error s -> ioError $ userError ("getPopularBookmarks: " ++ s)
+
+  where eff_url = baseUrl ++ "/popular"
+
+getTagPopularBookmarks :: Tag -> IO [Post]
+getTagPopularBookmarks = undefined
+getSiteAlerts       :: IO [Post]
+getSiteAlerts = undefined
+getUserBookmarks    :: String -> IO [Post]
+getUserBookmarks = undefined
+getUserTagBookmarks :: String -> Tag -> IO [Post]
+getUserTagBookmarks = undefined
+getUserTaggedBookmarks :: String -> [Tag] -> IO [Post]
+getUserTaggedBookmarks = undefined
+getUserInfo            :: String -> IO [Post]
+getUserInfo = undefined
+getUserPublicTags      :: String -> IO [Post]
+getUserPublicTags = undefined
+getUserSubscriptions   :: String -> IO [Post]
+getUserSubscriptions = undefined
+getUserInboxBookmarks  :: String -> String -> IO [Post]
+getUserInboxBookmarks = undefined
+getNetworkMemberBookmarks :: String -> IO [Post]
+getNetworkMemberBookmarks = undefined
+getNetworkMemberTaggedBookmarks :: String -> [Tag] -> IO [Post]
+getNetworkMemberTaggedBookmarks = undefined
+getNetworkMembers      :: String -> IO [Post]
+getNetworkMembers = undefined
+getNetworkFans         :: String -> IO [Post]
+getNetworkFans = undefined
+getURLBookmarks        :: URLString -> IO [Post]
+getURLBookmarks = undefined
+getURLSummary          :: URLString -> IO [Post]
+getURLSummary = undefined
 
 ------------------------------------------------------------------------
 
@@ -110,3 +217,36 @@ instance JSON URLDetails where
                        --  , url   = the_url }
 
     readJSON s = fail ("Network.Delicious.JSON: url details malformed: "++ show s)
+
+instance JSON Post where
+--    showJSON p = ...
+
+    readJSON (JSArray []) = return nullPost
+    readJSON (JSObject (JSONObject pairs))
+        = do tags <- case lookup "t" pairs of
+                       Just n -> readJSON n
+                       Nothing -> return []
+             url <- case lookup "u" pairs of
+                        Nothing -> fail "Network.Delicious.JSON: Missing JSON field: url"
+                        Just  n -> readJSON n
+
+             notes <- case lookup "n" pairs of
+                        Nothing -> return ""
+                        Just  n -> readJSON n
+             desc <- case lookup "d" pairs of
+                        Nothing -> return ""
+                        Just  n -> readJSON n
+             ts <- case lookup "dt" pairs of
+                        Nothing -> return ""
+                        Just  n -> readJSON n
+
+             return $ nullPost{ postHref=url
+	                      , postDesc=desc
+			      , postNotes=notes
+			      , postTags=tags
+			      , postStamp=ts
+			      }
+
+    readJSON s = fail ("Network.Delicious.JSON: malformed post: "++ show s)
+
+
