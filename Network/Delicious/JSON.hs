@@ -18,7 +18,7 @@
 --
 
 module Network.Delicious.JSON 
-       ( getHotlist          -- :: IO [Post]
+       ( getHotlist          -- :: DM [Post]
        , getRecentBookmarks  -- :: IO [Post]
        , getTagBookmarks     -- :: Tag -> IO [Post]
        , getTagsBookmarks    -- :: [Tag] -> IO [Post]
@@ -78,193 +78,197 @@ import Web.DAV.Client.Curl
 -- >                           ,("xmonad",20)]
 -- >                   }
 --
-getURLDetails :: String -> IO URLDetails
+getURLDetails :: String -> DM URLDetails
 getURLDetails uarl = getURLSummary uarl
 
 baseUrl :: String
 baseUrl = "http://feeds.delicious.com/v2/json"
 
+buildUrl :: ({-URL-}String -> IO a) -> {-URL-}String -> DM a
+buildUrl f u = do
+  mbc <- getCount
+  liftIO (f (case mbc of { Nothing -> u ; Just c ->  u++"?count="++show c}))
+
 ------------------------------------------------------------------------
 
-getHotlist :: IO [Post]
+getHotlist :: DM [Post]
 getHotlist = do
-    s <- readContentsURL hot_url
+    s <- buildUrl readContentsURL hot_url
     case decodeStrict s of
       Ok e    -> return e
-      Error e -> ioError $ userError ("getHotlist: " ++ e)
-
+      Error e -> liftIO $ ioError $ userError ("getHotlist: " ++ e)
   where hot_url = baseUrl
 
-getRecentBookmarks :: IO [Post]
+getRecentBookmarks :: DM [Post]
 getRecentBookmarks = do
-    s <- readContentsURL rec_url
+    s <- buildUrl readContentsURL rec_url
     case decodeStrict s of
       Ok e    -> return e
-      Error e -> ioError $ userError ("getRecent: " ++ e)
+      Error e -> liftIO $ ioError $ userError ("getRecent: " ++ e)
 
   where rec_url = baseUrl ++ "/recent"
 
-getTagBookmarks :: Tag -> IO [Post]
+getTagBookmarks :: Tag -> DM [Post]
 getTagBookmarks tg = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error e -> ioError $ userError ("getTagBookmarks: " ++ e)
+      Error e -> liftIO $ ioError $ userError ("getTagBookmarks: " ++ e)
 
   where eff_url = baseUrl ++ "/tag/" ++ tg
 
-getTagsBookmarks    :: [Tag] -> IO [Post]
+getTagsBookmarks    :: [Tag] -> DM [Post]
 getTagsBookmarks tgs = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getTagsBookmarks: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getTagsBookmarks: " ++ s)
 
   where eff_url = baseUrl ++ "/tag/" ++ concat (intersperse "+" tgs)
 
-getPopularBookmarks :: IO [Post]
+getPopularBookmarks :: DM [Post]
 getPopularBookmarks = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getPopularBookmarks: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getPopularBookmarks: " ++ s)
 
   where eff_url = baseUrl ++ "/popular"
 
-getTagPopularBookmarks :: Tag -> IO [Post]
+getTagPopularBookmarks :: Tag -> DM [Post]
 getTagPopularBookmarks tg = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getTagPopularBookmarks: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getTagPopularBookmarks: " ++ s)
 
   where eff_url = baseUrl ++ "/popular/" ++ tg
 
-getSiteAlerts       :: IO [Post]
+getSiteAlerts       :: DM [Post]
 getSiteAlerts = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getTagPopularBookmarks: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getTagPopularBookmarks: " ++ s)
 
   where eff_url = baseUrl ++ "/alerts"
 
-getUserBookmarks    :: String -> IO [Post]
+getUserBookmarks    :: String -> DM [Post]
 getUserBookmarks usr = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getUserBookmarks: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getUserBookmarks: " ++ s)
 
   where eff_url = baseUrl ++ '/':usr
 
-getUserTagBookmarks :: String -> Tag -> IO [Post]
+getUserTagBookmarks :: String -> Tag -> DM [Post]
 getUserTagBookmarks usr tg = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getUserTagBookmarks: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getUserTagBookmarks: " ++ s)
 
   where eff_url = baseUrl ++ '/':usr++'/':tg
 
-getUserTaggedBookmarks :: String -> [Tag] -> IO [Post]
+getUserTaggedBookmarks :: String -> [Tag] -> DM [Post]
 getUserTaggedBookmarks usr tgs = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getUserTaggedBookmarks: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getUserTaggedBookmarks: " ++ s)
 
   where eff_url = baseUrl ++ '/':usr++'/':concat (intersperse "+" tgs)
 
-getUserInfo :: String -> IO [Post]
+getUserInfo :: String -> DM [Post]
 getUserInfo usr = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getUserInfo: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getUserInfo: " ++ s)
 
   where eff_url = baseUrl ++ "/userinfo/" ++ usr
 
-getUserPublicTags      :: String -> IO [Post]
+getUserPublicTags      :: String -> DM [Post]
 getUserPublicTags usr = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getUserPublicTags: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getUserPublicTags: " ++ s)
 
   where eff_url = baseUrl ++ "/tags/" ++ usr
 
 
-getUserSubscriptions   :: String -> IO [Post]
+getUserSubscriptions   :: String -> DM [Post]
 getUserSubscriptions usr = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getUserSubscriptions: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getUserSubscriptions: " ++ s)
 
   where eff_url = baseUrl ++ "/subscriptions/" ++ usr
 
-getUserInboxBookmarks  :: String -> String -> IO [Post]
+getUserInboxBookmarks  :: String -> String -> DM [Post]
 getUserInboxBookmarks usr k = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getUserInboxBookmarks: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getUserInboxBookmarks: " ++ s)
 
   where eff_url = baseUrl ++ "/inbox/" ++ usr ++ "?private="++k
 
-getNetworkMemberBookmarks :: String -> IO [Post]
+getNetworkMemberBookmarks :: String -> DM [Post]
 getNetworkMemberBookmarks usr = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getNetworkMemberBookmarks: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getNetworkMemberBookmarks: " ++ s)
 
   where eff_url = baseUrl ++ "/network/" ++ usr
 
-getNetworkMemberTaggedBookmarks :: String -> [Tag] -> IO [Post]
+getNetworkMemberTaggedBookmarks :: String -> [Tag] -> DM [Post]
 getNetworkMemberTaggedBookmarks usr tgs = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getNetworkMemberTaggedBookmarks: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getNetworkMemberTaggedBookmarks: " ++ s)
 
   where eff_url = baseUrl ++ "/network/" ++ usr ++ '/':concat (intersperse "+" tgs)
 
 
-getNetworkMembers :: String -> IO [Post]
+getNetworkMembers :: String -> DM [Post]
 getNetworkMembers usr = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getNetworkMembers: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getNetworkMembers: " ++ s)
 
   where eff_url = baseUrl ++ "/networkmembers/" ++ usr
 
-getNetworkFans         :: String -> IO [Post]
+getNetworkFans         :: String -> DM [Post]
 getNetworkFans usr = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getNetworkFans: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getNetworkFans: " ++ s)
 
   where eff_url = baseUrl ++ "/networkfans/" ++ usr
 
-getURLBookmarks  :: URLString -> IO [Post]
+getURLBookmarks  :: URLString -> DM [Post]
 getURLBookmarks turl = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getURLBookmarks: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getURLBookmarks: " ++ s)
 
   where eff_url = baseUrl ++ "/url/" ++ md5sumStr turl
 
-getURLSummary :: URLString -> IO URLDetails
+getURLSummary :: URLString -> DM URLDetails
 getURLSummary turl = do
-    ls <- readContentsURL eff_url
+    ls <- buildUrl readContentsURL eff_url
     case decodeStrict ls of
       Ok s    -> return s
-      Error s -> ioError $ userError ("getURLSummary: " ++ s)
+      Error s -> liftIO $ ioError $ userError ("getURLSummary: " ++ s)
 
   where eff_url = baseUrl ++ "/urlinfo/" ++ md5sumStr turl
 
