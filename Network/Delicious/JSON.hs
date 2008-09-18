@@ -39,6 +39,11 @@ module Network.Delicious.JSON
        , getURLBookmarks        -- :: URLString -> IO [Post]
        , getURLSummary          -- :: URLString -> IO URLDetails
        , getURLDetails          -- :: URLString -> IO URLDetails
+       
+       , HtmlFeed(..)
+       , baseHtmlFeed           -- :: HtmlFeed
+       , feed_html_url
+       , getHtmlForTag          -- :: HtmlFeed -> Maybe Tag -> IO {-Html}String
 
        , URLDetails(..)
        ) where
@@ -329,3 +334,74 @@ instance JSON URLDetails where
 			   }
 
     readJSON s = fail ("Network.Delicious.JSON: url details malformed: "++ show s)
+
+data HtmlFeed
+ = HtmlFeed
+     { hf_delUrl   :: Maybe {-URL-}String
+     , hf_extended :: Bool
+     , hf_divClass :: Maybe String
+     , hf_aClass   :: Maybe String
+     , hf_showTags :: Bool
+     , hf_tagClass :: Maybe String
+     , hf_tagSep   :: Maybe String
+     , hf_tagSepClass :: Maybe String
+     , hf_bulletEnt :: Maybe String
+     , hf_withFeedButton :: Maybe Bool
+     , hf_extendedInDiv  :: Maybe Bool
+     , hf_extendedClass  :: Maybe String
+     }
+
+baseHtmlFeed :: HtmlFeed
+baseHtmlFeed = HtmlFeed
+     { hf_delUrl   = Nothing
+     , hf_extended = False
+     , hf_divClass = Nothing
+     , hf_aClass   = Nothing
+     , hf_showTags = True
+     , hf_tagClass = Nothing
+     , hf_tagSep   = Nothing
+     , hf_tagSepClass = Nothing
+     , hf_bulletEnt   = Nothing
+     , hf_withFeedButton = Nothing
+     , hf_extendedInDiv  = Nothing
+     , hf_extendedClass  = Nothing
+     }
+     
+feed_html_url :: {-URL-}String
+feed_html_url = "http://feeds.delicious.com/html/"
+
+getHtmlForTag :: HtmlFeed
+              -> Maybe Tag
+	      -> DM {-Html-}String
+getHtmlForTag hf mbTg = do
+  u <- getUser
+  c <- getCount
+  let partial_url = build_query u c
+  let base_url = fromMaybe feed_html_url (hf_delUrl hf)
+  let eff_url = base_url ++ partial_url
+  liftIO $ readContentsURL eff_url
+ where
+  (-==>) _ Nothing = Nothing
+  (-==>) a (Just b) = Just (a ++ '=':b)
+  (-=>) a b = Just (a ++ '=':b)
+  
+  toB False a _ = a
+  toB _     _ b = b
+
+  build_query u c = userName u ++ (fromMaybe "" (fmap ('/':) mbTg)) ++ '?':opts
+    where
+      opts = concat $ intersperse "&" $ catMaybes
+         [ "count"     -=> show c
+	 , "extended"  -=> toB (hf_extended hf) "title" "body"
+	 , "divclass"  -==> hf_divClass hf
+	 , "aclass"    -==> hf_aClass hf
+	 , "tags"      -=> toB (hf_showTags hf) "no" "yes"
+	 , "tagclass"  -==> hf_tagClass hf
+	 , "tagsep"    -==> hf_tagSep hf
+	 , "tagsepclass" -==> hf_tagSepClass hf
+	 , "bullet"    -==> hf_bulletEnt hf
+	 , "rssbutton" -==> fmap (\ x -> toB x "no" "yes") (hf_withFeedButton hf)
+	 , "extendeddiv" -==> fmap (\ x -> toB x "no" "yes") (hf_extendedInDiv hf)
+	 , "extendedclass" -==> hf_extendedClass hf
+	 ]
+	 
