@@ -4,11 +4,11 @@
 -- Copyright : (c) Galois, Inc. 2008
 -- License   : BSD3
 --
--- Maintainer: Don Stewart <dons@galois.com>
+-- Maintainer: Sigbjorn Finne <sof@galois.com>
 -- Stability : provisional
 -- Portability:
 --
--- Binding to delicious tagging system
+-- Binding to del.icio.us tagging system
 --
 
 module Network.Delicious

@@ -4,7 +4,7 @@
 -- Copyright : (c) Galois, Inc. 2008
 -- License   : BSD3
 --
--- Maintainer: Don Stewart <dons@galois.com>
+-- Maintainer: Sigbjorn Finne <sof@galois.com>
 -- Stability : provisional
 -- Portability:
 --
@@ -368,7 +368,7 @@ baseHtmlFeed = HtmlFeed
      }
      
 feed_html_url :: {-URL-}String
-feed_html_url = "http://feeds.delicious.com/html/"
+feed_html_url = "http://feeds.delicious.com/html"
 
 getHtmlForTag :: HtmlFeed
               -> Maybe Tag
@@ -381,17 +381,10 @@ getHtmlForTag hf mbTg = do
   let eff_url = base_url ++ partial_url
   liftIO $ readContentsURL eff_url
  where
-  (-==>) _ Nothing = Nothing
-  (-==>) a (Just b) = Just (a ++ '=':b)
-  (-=>) a b = Just (a ++ '=':b)
-  
-  toB False a _ = a
-  toB _     _ b = b
-
-  build_query u c = userName u ++ (fromMaybe "" (fmap ('/':) mbTg)) ++ '?':opts
+  build_query u c = consSlash (userName u) ++ (fromMaybe "" (fmap consSlash mbTg)) ++ '?':opts
     where
       opts = concat $ intersperse "&" $ catMaybes
-         [ "count"     -=> show c
+         [ "count"     -==> fmap show c
 	 , "extended"  -=> toB (hf_extended hf) "title" "body"
 	 , "divclass"  -==> hf_divClass hf
 	 , "aclass"    -==> hf_aClass hf
@@ -405,3 +398,13 @@ getHtmlForTag hf mbTg = do
 	 , "extendedclass" -==> hf_extendedClass hf
 	 ]
 	 
+  consSlash "" = ""
+  consSlash xs = '/':xs
+
+  (-==>) _ Nothing = Nothing
+  (-==>) a (Just b) = Just (a ++ '=':b)
+  (-=>) a b = Just (a ++ '=':b)
+  
+  toB False a _ = a
+  toB _     _ b = b
+

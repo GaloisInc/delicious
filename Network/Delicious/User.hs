@@ -1,3 +1,14 @@
+--------------------------------------------------------------------
+-- |
+-- Module    : Network.Delicious.User
+-- Copyright : (c) Galois, Inc. 2008
+-- License   : BSD3
+--
+-- Maintainer: Sigbjorn Finne <sof@galois.com>
+-- Stability : provisional
+-- Portability:
+--
+--------------------------------------------------------------------
 module Network.Delicious.User
        ( getLastUpdate   -- :: DM TimeString
 
