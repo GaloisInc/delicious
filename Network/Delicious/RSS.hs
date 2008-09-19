@@ -45,8 +45,9 @@ import Text.Feed.Import
 import Data.Maybe
 import Data.List ( intersperse )
 
-import Web.DAV.Client.Curl
-import Web.MIME.MD5
+import Network.Curl
+import Data.ByteString ( pack )
+import Data.Digest.OpenSSL.MD5 
 
 -- ToDo:
 --    * support for 'count' parameter
@@ -224,7 +225,7 @@ getNetworkFans u = do
 
 getURLBookmarks :: URLString -> IO [Post]
 getURLBookmarks url = do
-  ls <- readContentsURL (b_url_url ++ md5sumStr url)
+  ls <- readContentsURL (b_url_url ++ md5sum (pack (map (fromIntegral.fromEnum) url)))
   case parseFeedString ls of
     Nothing -> fail ("getURLBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
@@ -246,3 +247,10 @@ toPost i =
    , postTags = getItemCategories i
    , postStamp = fromMaybe "" (getItemPublishDate i)
    }
+
+readContentsURL :: URLString -> IO String
+readContentsURL u = do
+  let opts = [ CurlFollowLocation True
+	     ]
+  (_,xs) <- curlGetString u opts
+  return xs
