@@ -43,7 +43,7 @@ module Network.Delicious.JSON
        , HtmlFeed(..)
        , baseHtmlFeed           -- :: HtmlFeed
        , feed_html_url
-       , getHtmlForTag          -- :: HtmlFeed -> Maybe Tag -> IO {-Html}String
+       , getHtmlForTag          -- :: HtmlFeed -> Maybe Tag -> IO {-Html-}String
 
        , URLDetails(..)
        ) where
@@ -59,8 +59,9 @@ import Data.Ord
 import Data.Char
 import Data.Maybe
  
-import Web.MIME.MD5 (md5sumStr)
-import Web.DAV.Client.Curl
+import Network.Curl
+import Data.ByteString ( pack )
+import Data.Digest.OpenSSL.MD5 
 
 ------------------------------------------------------------------------
 
@@ -266,7 +267,7 @@ getURLBookmarks turl = do
       Ok s    -> return s
       Error s -> liftIO $ ioError $ userError ("getURLBookmarks: " ++ s)
 
-  where eff_url = baseUrl ++ "/url/" ++ md5sumStr turl
+  where eff_url = baseUrl ++ "/url/" ++ md5sum (pack (map (fromIntegral.fromEnum) turl))
 
 getURLSummary :: URLString -> DM URLDetails
 getURLSummary turl = do
@@ -275,7 +276,7 @@ getURLSummary turl = do
       Ok s    -> return s
       Error s -> liftIO $ ioError $ userError ("getURLSummary: " ++ s)
 
-  where eff_url = baseUrl ++ "/urlinfo/" ++ md5sumStr turl
+  where eff_url = baseUrl ++ "/urlinfo/" ++ md5sum (pack (map (fromIntegral.fromEnum) turl))
 
 ------------------------------------------------------------------------
 
@@ -408,3 +409,9 @@ getHtmlForTag hf mbTg = do
   toB False a _ = a
   toB _     _ b = b
 
+readContentsURL :: URLString -> IO String
+readContentsURL u = do
+  let opts = [ CurlFollowLocation True
+	     ]
+  (_,xs) <- curlGetString u opts
+  return xs
