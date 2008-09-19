@@ -35,15 +35,13 @@ module Network.Delicious.User
        ) where
 
 import Network.Delicious.Types
+import Network.Delicious.Fetch
 
 
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Control.Exception ( finally )
 
-import Network.Curl.Types ( URLString )
-import Network.Curl
 import Text.XML.Light as XML hiding ( findAttr )
 
 --
@@ -52,12 +50,7 @@ restReq cmd opts = do
   b      <- getBase
   u      <- getUser
   let effUrl = b ++ '/':cmd ++ tlOpts opts
-  let opts = [ CurlHttpAuth [HttpAuthAny]
-             , CurlUserPwd (userName u ++ 
-	                    case userPass u of {"" -> ""; p -> ':':p })
-             , CurlFollowLocation True
-	     ]
-  (_,xs) <- liftIO $ curlGetString effUrl opts
+  xs <- liftIO $ readUserContentsURL u effUrl
   return (fromMaybe (Right xs) $ fmap Left $ parseXMLDoc xs)
  where
   tlOpts [] = ""

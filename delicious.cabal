@@ -6,8 +6,8 @@ description:     Access to the del.icio.us social tagging site's API(v2) from Ha
 category:        Web
 license:         BSD3
 license-file:    LICENSE
-author:          sof@galois.com
-maintainer:      sof@galois.com
+author:          Sigbjorn Finne <sof@galois.com>
+maintainer:      Sigbjorn Finne <sof@galois.com>
 copyright:       (c) 2008 Galois, Inc.
 cabal-version:   >= 1.2
 build-type:      Simple
@@ -18,7 +18,9 @@ library
       Network.Delicious.User,
       Network.Delicious.RSS,
       Network.Delicious.JSON,
+      Network.Delicious.Fetch,
       Network.Delicious
+
 
     build-depends:   base,
                      xml        >= 1.2.6,

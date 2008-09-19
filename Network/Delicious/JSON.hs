@@ -59,7 +59,7 @@ import Data.Ord
 import Data.Char
 import Data.Maybe
  
-import Network.Curl
+import Network.Delicious.Fetch ( readContentsURL )
 import Data.ByteString ( pack )
 import Data.Digest.OpenSSL.MD5 
 
@@ -90,7 +90,7 @@ getURLDetails uarl = getURLSummary uarl
 baseUrl :: String
 baseUrl = "http://feeds.delicious.com/v2/json"
 
-buildUrl :: ({-URL-}String -> IO a) -> {-URL-}String -> DM a
+buildUrl :: (URLString -> IO a) -> URLString -> DM a
 buildUrl f u = do
   mbc <- getCount
   liftIO (f (case mbc of { Nothing -> u ; Just c ->  u++"?count="++show c}))
@@ -267,7 +267,7 @@ getURLBookmarks turl = do
       Ok s    -> return s
       Error s -> liftIO $ ioError $ userError ("getURLBookmarks: " ++ s)
 
-  where eff_url = baseUrl ++ "/url/" ++ md5sum (pack (map (fromIntegral.fromEnum) turl))
+  where eff_url = baseUrl ++ "/url/" ++ hashUrl turl
 
 getURLSummary :: URLString -> DM URLDetails
 getURLSummary turl = do
@@ -276,7 +276,10 @@ getURLSummary turl = do
       Ok s    -> return s
       Error s -> liftIO $ ioError $ userError ("getURLSummary: " ++ s)
 
-  where eff_url = baseUrl ++ "/urlinfo/" ++ md5sum (pack (map (fromIntegral.fromEnum) turl))
+  where eff_url = baseUrl ++ "/urlinfo/" ++ hashUrl turl
+
+hashUrl :: URLString -> String
+hashUrl s = md5sum (pack (map (fromIntegral.fromEnum) s))
 
 ------------------------------------------------------------------------
 
@@ -408,10 +411,3 @@ getHtmlForTag hf mbTg = do
   
   toB False a _ = a
   toB _     _ b = b
-
-readContentsURL :: URLString -> IO String
-readContentsURL u = do
-  let opts = [ CurlFollowLocation True
-	     ]
-  (_,xs) <- curlGetString u opts
-  return xs
