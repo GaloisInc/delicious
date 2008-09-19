@@ -42,7 +42,7 @@ module Network.Delicious.Types
        
        ) where
 
-import Web.DAV.Types ( URLString )
+import Network.Curl.Types ( URLString )
 import Data.Maybe ( catMaybes )
 
 import Text.JSON.Types

@@ -1,8 +1,8 @@
 name:            delicious
 version:         0.3.1
 homepage:        http://galois.com
-synopsis:        Accessing the del.icio.us APIs from Haskell
-description:     Access to the del.icio.us social tagging site's API from Haskell.
+synopsis:        Accessing the del.icio.us APIs from Haskell (v2)
+description:     Access to the del.icio.us social tagging site's API(v2) from Haskell
 category:        Web
 license:         BSD3
 license-file:    LICENSE
@@ -23,7 +23,9 @@ library
     build-depends:   base,
                      xml        >= 1.2.6,
                      feed       >= 0.3.1,
-                     webclient  >= 0.2,
+                     curl       >= 1.1,
+                     bytestring,
+                     nano-md5,
                      json       >= 0.3.3
 
     ghc-options:     -Wall

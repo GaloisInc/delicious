@@ -8,6 +8,8 @@
 -- Stability : provisional
 -- Portability:
 --
+-- Accessing a user's tags and bookmarks
+--
 --------------------------------------------------------------------
 module Network.Delicious.User
        ( getLastUpdate   -- :: DM TimeString
@@ -40,11 +42,8 @@ import Data.List
 import Data.Maybe
 import Control.Exception ( finally )
 
-import Web.DAV.Types ( URLString )
-import Web.DAV.Backend.CurlPkg
-import Web.DAV.Backend.Interface
-import Web.DAV.Client
-import Web.DAV.Utils
+import Network.Curl.Types ( URLString )
+import Network.Curl
 import Text.XML.Light as XML hiding ( findAttr )
 
 --
@@ -53,10 +52,12 @@ restReq cmd opts = do
   b      <- getBase
   u      <- getUser
   let effUrl = b ++ '/':cmd ++ tlOpts opts
-  let (base,path) = splitURL effUrl
-  let fact = (factory defaultConfig{cfgUserPass=Just(userName u,userPass u)})
-  wh <- liftIO $ primOpen fact base []
-  xs <- liftIO $ readResource wh path `finally` (primClose fact wh)
+  let opts = [ CurlHttpAuth [HttpAuthAny]
+             , CurlUserPwd (userName u ++ 
+	                    case userPass u of {"" -> ""; p -> ':':p })
+             , CurlFollowLocation True
+	     ]
+  (_,xs) <- liftIO $ curlGetString effUrl opts
   return (fromMaybe (Right xs) $ fmap Left $ parseXMLDoc xs)
  where
   tlOpts [] = ""
