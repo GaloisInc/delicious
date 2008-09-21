@@ -133,6 +133,7 @@ getPosts' loc r f = do
    eltToPost e = Post
      { postHref   = findAttr "href" "" e
      , postDesc   = findAttr "description" "" e
+     , postUser   = findAttr "user" "" e
      , postNotes  = findAttr "extended" "" e
      , postTags   = words $ findAttr "tag" "" e
      , postStamp  = findAttr "time" "" e

@@ -20,6 +20,7 @@ module Network.Delicious.Types
        , nullUser
        
        , DM
+       , catchDM   -- :: DM a -> (IOError -> DM a) -> DM a
        , withUser  -- :: User -> DM a -> DM a
        , withCount -- :: Int -> DM a -> DM a
        , getUser   -- :: DM User
@@ -78,6 +79,9 @@ instance Monad DM where
   m >>= k  = DM $ \ env -> do
      v <- unDM m env
      unDM (k v)  env
+
+catchDM :: DM a -> (IOError -> DM a) -> DM a
+catchDM (DM m) h = DM $ \ env -> catch (m env) (\err -> unDM (h err) env)
 
 withUser :: User -> DM a -> DM a
 withUser u k = DM $ \ env -> (unDM k) env{dmUser=u}
@@ -141,6 +145,7 @@ nullFilter =
 data Post
  = Post
      { postHref   :: URLString
+     , postUser   :: String
      , postDesc   :: String
      , postNotes  :: String
      , postTags   :: [Tag]
@@ -151,6 +156,7 @@ data Post
 nullPost :: Post
 nullPost = Post
      { postHref   = ""
+     , postUser   = ""
      , postDesc   = ""
      , postNotes  = ""
      , postTags   = []
