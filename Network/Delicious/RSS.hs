@@ -12,27 +12,27 @@
 
 
 module Network.Delicious.RSS
-       ( getHotlist          -- :: IO [Post]
-       , getRecentBookmarks  -- :: IO [Post]
-       , getTagBookmarks     -- :: Tag -> IO [Post]
-       , getTagsBookmarks    -- :: [Tag] -> IO [Post]
-       , getPopularBookmarks -- :: IO [Post]
-       , getTagPopularBookmarks -- :: Tag -> IO [Post]
-       , getSiteAlerts       -- :: IO [Post]
-       , getUserBookmarks    -- :: String -> IO [Post]
-       , getUserTagBookmarks -- :: String -> Tag -> IO [Post]
-       , getUserTaggedBookmarks -- :: String -> [Tag] -> IO [Post]
-       , getUserInfo            -- :: String -> IO [Post]
-       , getUserPublicTags      -- :: String -> IO [Post]
-       , getUserSubscriptions   -- :: String -> IO [Post]
-       , getUserInboxBookmarks  -- :: String -> String -> IO [Post]
-       , getNetworkMemberBookmarks -- :: String -> IO [Post]
-       , getNetworkMemberTaggedBookmarks -- :: String -> [Tag] -> IO [Post]
-       , getNetworkMembers      -- :: String -> IO [Post]
-       , getNetworkFans         -- :: String -> IO [Post]
-       , getURLBookmarks        -- :: URLString -> IO [Post]
+       ( getHotlist          -- :: DM [Post]
+       , getRecentBookmarks  -- :: DM [Post]
+       , getTagBookmarks     -- :: Tag -> DM [Post]
+       , getTagsBookmarks    -- :: [Tag] -> DM [Post]
+       , getPopularBookmarks -- :: DM [Post]
+       , getTagPopularBookmarks -- :: Tag -> DM [Post]
+       , getSiteAlerts       -- :: DM [Post]
+       , getUserBookmarks    -- :: String -> DM [Post]
+       , getUserTagBookmarks -- :: String -> Tag -> DM [Post]
+       , getUserTaggedBookmarks -- :: String -> [Tag] -> DM [Post]
+       , getUserInfo            -- :: String -> DM [Post]
+       , getUserPublicTags      -- :: String -> DM [Post]
+       , getUserSubscriptions   -- :: String -> DM [Post]
+       , getUserInboxBookmarks  -- :: String -> String -> DM [Post]
+       , getNetworkMemberBookmarks -- :: String -> DM [Post]
+       , getNetworkMemberTaggedBookmarks -- :: String -> [Tag] -> DM [Post]
+       , getNetworkMembers      -- :: String -> DM [Post]
+       , getNetworkFans         -- :: String -> DM [Post]
+       , getURLBookmarks        -- :: URLString -> DM [Post]
 {-
-       , getURLSummary          -- :: URLString -> IO [Post]
+       , getURLSummary          -- :: URLString -> DM [Post]
 -}
        ) where
 
@@ -97,143 +97,148 @@ b_urlinfo_url :: {-URL-}String
 b_urlinfo_url = deli_base ++ "/rss/urlinfo/"
 -}
 
-getHotlist :: IO [Post]
+buildUrl :: (URLString -> IO a) -> URLString -> DM a
+buildUrl f u = do
+  mbc <- getCount
+  liftIO (f (case mbc of { Nothing -> u ; Just c ->  u++"?count="++show c}))
+
+getHotlist :: DM [Post]
 getHotlist = do
-  ls <- readContentsURL hotlist_url
+  ls <- buildUrl readContentsURL hotlist_url
   case parseFeedString ls of
     Nothing -> fail ("getHotlist: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getRecentBookmarks :: IO [Post]
+getRecentBookmarks :: DM [Post]
 getRecentBookmarks = do
-  ls <- readContentsURL recent_url
+  ls <- buildUrl readContentsURL recent_url
   case parseFeedString ls of
     Nothing -> fail ("getRecentBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getTagBookmarks :: Tag -> IO [Post]
+getTagBookmarks :: Tag -> DM [Post]
 getTagBookmarks tg = do
-  ls <- readContentsURL (tag_url ++ tg)
+  ls <- buildUrl readContentsURL (tag_url ++ tg)
   case parseFeedString ls of
     Nothing -> fail ("getTagBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getTagsBookmarks :: [Tag] -> IO [Post]
+getTagsBookmarks :: [Tag] -> DM [Post]
 getTagsBookmarks tgs = do
-  ls <- readContentsURL (tag_url ++ concat (intersperse "+" tgs))
+  ls <- buildUrl readContentsURL (tag_url ++ concat (intersperse "+" tgs))
   case parseFeedString ls of
     Nothing -> fail ("getTagsBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getPopularBookmarks :: IO [Post]
+getPopularBookmarks :: DM [Post]
 getPopularBookmarks = do
-  ls <- readContentsURL popular_url
+  ls <- buildUrl readContentsURL popular_url
   case parseFeedString ls of
     Nothing -> fail ("getPopularBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getTagPopularBookmarks :: Tag -> IO [Post]
+getTagPopularBookmarks :: Tag -> DM [Post]
 getTagPopularBookmarks tg = do
-  ls <- readContentsURL (popular_url ++ '/':tg)
+  ls <- buildUrl readContentsURL (popular_url ++ '/':tg)
   case parseFeedString ls of
     Nothing -> fail ("getTagPopularBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getSiteAlerts :: IO [Post]
+getSiteAlerts :: DM [Post]
 getSiteAlerts = do
-  ls <- readContentsURL alert_url
+  ls <- buildUrl readContentsURL alert_url
   case parseFeedString ls of
     Nothing -> fail ("getSiteAlerts: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getUserBookmarks :: String -> IO [Post]
+getUserBookmarks :: String -> DM [Post]
 getUserBookmarks u = do
-  ls <- readContentsURL (user_url ++ u)
+  ls <- buildUrl readContentsURL (user_url ++ u)
   case parseFeedString ls of
     Nothing -> fail ("getUserBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getUserTagBookmarks :: String -> Tag -> IO [Post]
+getUserTagBookmarks :: String -> Tag -> DM [Post]
 getUserTagBookmarks u tg = do
-  ls <- readContentsURL (user_url ++ u ++ '/':tg)
+  ls <- buildUrl readContentsURL (user_url ++ u ++ '/':tg)
   case parseFeedString ls of
     Nothing -> fail ("getUserBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getUserTaggedBookmarks :: String -> [Tag] -> IO [Post]
+getUserTaggedBookmarks :: String -> [Tag] -> DM [Post]
 getUserTaggedBookmarks u tgs = do
-  ls <- readContentsURL (user_url ++ u ++ '/':concat (intersperse "+" tgs))
+  ls <- buildUrl readContentsURL (user_url ++ u ++ '/':concat (intersperse "+" tgs))
   case parseFeedString ls of
     Nothing -> fail ("getUserTaggedBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getUserInfo :: String -> IO [Post]
+getUserInfo :: String -> DM [Post]
 getUserInfo u = do
-  ls <- readContentsURL (user_url ++ "userinfo/" ++ u)
+  ls <- buildUrl readContentsURL (user_url ++ "userinfo/" ++ u)
   case parseFeedString ls of
     Nothing -> fail ("getUserInfo: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getUserPublicTags :: String -> IO [Post]
+getUserPublicTags :: String -> DM [Post]
 getUserPublicTags u = do
-  ls <- readContentsURL (tags_url ++ u)
+  ls <- buildUrl readContentsURL (tags_url ++ u)
   case parseFeedString ls of
     Nothing -> fail ("getUserPublicTags: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getUserSubscriptions :: String -> IO [Post]
+getUserSubscriptions :: String -> DM [Post]
 getUserSubscriptions u = do
-  ls <- readContentsURL (user_url ++ "subscriptions/" ++ u)
+  ls <- buildUrl readContentsURL (user_url ++ "subscriptions/" ++ u)
   case parseFeedString ls of
     Nothing -> fail ("getUserSubscriptions: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getUserInboxBookmarks :: String -> String -> IO [Post]
+getUserInboxBookmarks :: String -> String -> DM [Post]
 getUserInboxBookmarks u key = do
-  ls <- readContentsURL (inbox_url ++ u ++ "?private="++key)
+  ls <- buildUrl readContentsURL (inbox_url ++ u ++ "?private="++key)
   case parseFeedString ls of
     Nothing -> fail ("getUserInboxBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getNetworkMemberBookmarks :: String -> IO [Post]
+getNetworkMemberBookmarks :: String -> DM [Post]
 getNetworkMemberBookmarks u = do
-  ls <- readContentsURL (network_url ++ u)
+  ls <- buildUrl readContentsURL (network_url ++ u)
   case parseFeedString ls of
     Nothing -> fail ("getNetworkMemberBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getNetworkMemberTaggedBookmarks :: String -> [Tag] -> IO [Post]
+getNetworkMemberTaggedBookmarks :: String -> [Tag] -> DM [Post]
 getNetworkMemberTaggedBookmarks u tgs = do
-  ls <- readContentsURL (network_url ++ u ++ '/':concat (intersperse "+" tgs))
+  ls <- buildUrl readContentsURL (network_url ++ u ++ '/':concat (intersperse "+" tgs))
   case parseFeedString ls of
     Nothing -> fail ("getNetworkMemberTaggedBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getNetworkMembers :: String -> IO [Post]
+getNetworkMembers :: String -> DM [Post]
 getNetworkMembers u = do
-  ls <- readContentsURL (network_mem_url ++ u)
+  ls <- buildUrl readContentsURL (network_mem_url ++ u)
   case parseFeedString ls of
     Nothing -> fail ("getNetworkMembers: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getNetworkFans :: String -> IO [Post]
+getNetworkFans :: String -> DM [Post]
 getNetworkFans u = do
-  ls <- readContentsURL (network_fans_url ++ u)
+  ls <- buildUrl readContentsURL (network_fans_url ++ u)
   case parseFeedString ls of
     Nothing -> fail ("getNetworkFans: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
-getURLBookmarks :: URLString -> IO [Post]
+getURLBookmarks :: URLString -> DM [Post]
 getURLBookmarks url = do
-  ls <- readContentsURL (b_url_url ++ md5sum (pack (map (fromIntegral.fromEnum) url)))
+  ls <- buildUrl readContentsURL (b_url_url ++ hashUrl url)
   case parseFeedString ls of
     Nothing -> fail ("getURLBookmarks: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
 
 {- Not on offer for RSS backend:
-getURLSummary :: URLString -> IO [Post]
+getURLSummary :: URLString -> DM [Post]
 getURLSummary url = do
-  ls <- readContentsURL (b_urlinfo_url ++ md5sumStr url)
+  ls <- buildUrl readContentsURL (b_urlinfo_url ++ hashUrl url)
   case parseFeedString ls of
     Nothing -> fail ("getURLSummary: invalid RSS feed")
     Just f  -> return (map toPost (feedItems f))
@@ -244,6 +249,7 @@ toPost i =
  nullPost
    { postHref = fromMaybe "" (getItemLink i)
    , postDesc = fromMaybe "" (getItemTitle i)
+   , postUser = fromMaybe "" (getItemAuthor i)
    , postTags = getItemCategories i
    , postStamp = fromMaybe "" (getItemPublishDate i)
    }
@@ -254,3 +260,7 @@ readContentsURL u = do
 	     ]
   (_,xs) <- curlGetString u opts
   return xs
+
+hashUrl :: URLString -> String
+hashUrl s = md5sum (pack (map (fromIntegral.fromEnum) s))
+
