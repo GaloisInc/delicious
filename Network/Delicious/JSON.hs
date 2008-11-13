@@ -341,15 +341,15 @@ instance JSON URLDetails where
 
 data HtmlFeed
  = HtmlFeed
-     { hf_delUrl   :: Maybe {-URL-}String
-     , hf_extended :: Bool
-     , hf_divClass :: Maybe String
-     , hf_aClass   :: Maybe String
-     , hf_showTags :: Bool
-     , hf_tagClass :: Maybe String
-     , hf_tagSep   :: Maybe String
-     , hf_tagSepClass :: Maybe String
-     , hf_bulletEnt :: Maybe String
+     { hf_delUrl         :: Maybe {-URL-}String
+     , hf_extended       :: Bool
+     , hf_divClass       :: Maybe String
+     , hf_aClass         :: Maybe String
+     , hf_showTags       :: Bool
+     , hf_tagClass       :: Maybe String
+     , hf_tagSep         :: Maybe String
+     , hf_tagSepClass    :: Maybe String
+     , hf_bulletEnt      :: Maybe String
      , hf_withFeedButton :: Maybe Bool
      , hf_extendedInDiv  :: Maybe Bool
      , hf_extendedClass  :: Maybe String
@@ -357,15 +357,15 @@ data HtmlFeed
 
 baseHtmlFeed :: HtmlFeed
 baseHtmlFeed = HtmlFeed
-     { hf_delUrl   = Nothing
-     , hf_extended = False
-     , hf_divClass = Nothing
-     , hf_aClass   = Nothing
-     , hf_showTags = True
-     , hf_tagClass = Nothing
-     , hf_tagSep   = Nothing
-     , hf_tagSepClass = Nothing
-     , hf_bulletEnt   = Nothing
+     { hf_delUrl         = Nothing
+     , hf_extended       = False
+     , hf_divClass       = Nothing
+     , hf_aClass         = Nothing
+     , hf_showTags       = True
+     , hf_tagClass       = Nothing
+     , hf_tagSep         = Nothing
+     , hf_tagSepClass    = Nothing
+     , hf_bulletEnt      = Nothing
      , hf_withFeedButton = Nothing
      , hf_extendedInDiv  = Nothing
      , hf_extendedClass  = Nothing
