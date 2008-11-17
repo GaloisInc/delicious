@@ -1,12 +1,12 @@
 --------------------------------------------------------------------
 -- |
--- Module    : Network.Delicious.User
--- Copyright : (c) Galois, Inc. 2008
--- License   : BSD3
+-- Module      : Network.Delicious.User
+-- Copyright   : (c) Galois, Inc. 2008
+-- License     : BSD3
 --
--- Maintainer: Sigbjorn Finne <sof@galois.com>
--- Stability : provisional
--- Portability:
+-- Maintainer  : Sigbjorn Finne <sof@galois.com>
+-- Stability   : provisional
+-- Portability : portable
 --
 -- Accessing a user's tags and bookmarks
 --
@@ -188,14 +188,14 @@ addPost ps replace shared = do
        _ -> fail ("addPost: unexpected return payload " ++ show d)
  where
   toPostArgs p =
-    mb "url" (l2m $ postHref p) $
+     mb "url" (l2m $ postHref p) $
      mb "description" (l2m $ postDesc p) $
-      mb "extended" (l2m $ postNotes p) $
-       mb "tags" (l2m $ unwords $ postTags p) $
-        mb "dt"  (l2m $ postStamp p) $
-         mb "replace" (if replace then Just "yes" else Just "no") $
-          mb "shared" (if shared then Just "yes" else Just "no")
-             []
+     mb "extended" (l2m $ postNotes p) $
+     mb "tags" (l2m $ unwords $ postTags p) $
+     mb "dt"  (l2m $ postStamp p) $
+     mb "replace" (if replace then Just "yes" else Just "no") $
+     mb "shared" (if shared then Just "yes" else Just "no")
+        []
   l2m "" = Nothing
   l2m xs = Just xs
 

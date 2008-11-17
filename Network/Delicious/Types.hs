@@ -1,13 +1,15 @@
 --------------------------------------------------------------------
 -- |
--- Module    : 
--- Copyright : (c) Galois, Inc. 2008
--- License   : BSD3
+-- Module      : Network.Delicious.Types
+-- Copyright   : (c) Galois, Inc. 2008
+-- License     : BSD3
 --
--- Maintainer: Sigbjorn Finne <sof@galois.com>
--- Stability : provisional
--- Portability:
+-- Maintainer  : Sigbjorn Finne <sof@galois.com>
+-- Stability   : provisional
+-- Portability : portable
 --
+-- Types and data structures used by the Delicious API binding.
+-- 
 --------------------------------------------------------------------
 
 

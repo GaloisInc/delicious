@@ -1,12 +1,12 @@
 --------------------------------------------------------------------
 -- |
--- Module    : Network.Delicious.JSON
--- Copyright : (c) Galois, Inc. 2008
--- License   : BSD3
+-- Module      : Network.Delicious.JSON
+-- Copyright   : (c) Galois, Inc. 2008
+-- License     : BSD3
 --
--- Maintainer: Sigbjorn Finne <sof@galois.com>
--- Stability : provisional
--- Portability:
+-- Maintainer  : Sigbjorn Finne <sof@galois.com>
+-- Stability   : provisional
+-- Portability : portable
 --
 -- Access del.icio.us JSON services.
 --
@@ -16,7 +16,6 @@
 -- variety of data for use in your own custom applications and
 -- browser-based presentation styles."
 --
-
 module Network.Delicious.JSON 
        ( getHotlist          -- :: DM [Post]
        , getRecentBookmarks  -- :: IO [Post]
@@ -95,187 +94,95 @@ buildUrl f u = do
   mbc <- getCount
   liftIO (f (case mbc of { Nothing -> u ; Just c ->  u++"?count="++show c}))
 
+handleResult :: JSON a => String -> URLString -> DM a
+handleResult loc u = do
+    s <- buildUrl readContentsURL u
+    case decodeStrict s of
+      Ok e    -> return e
+      Error e -> liftIO $ ioError $ userError (loc ++ ':':' ':e)
+
 ------------------------------------------------------------------------
 
 getHotlist :: DM [Post]
-getHotlist = do
-    s <- buildUrl readContentsURL hot_url
-    case decodeStrict s of
-      Ok e    -> return e
-      Error e -> liftIO $ ioError $ userError ("getHotlist: " ++ e)
-  where hot_url = baseUrl
+getHotlist = handleResult "getHotlist" baseUrl
 
 getRecentBookmarks :: DM [Post]
-getRecentBookmarks = do
-    s <- buildUrl readContentsURL rec_url
-    case decodeStrict s of
-      Ok e    -> return e
-      Error e -> liftIO $ ioError $ userError ("getRecent: " ++ e)
-
+getRecentBookmarks = handleResult "getRecentBookmarks" rec_url
   where rec_url = baseUrl ++ "/recent"
 
 getTagBookmarks :: Tag -> DM [Post]
-getTagBookmarks tg = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error e -> liftIO $ ioError $ userError ("getTagBookmarks: " ++ e)
-
+getTagBookmarks tg = handleResult "getTagBookmarks" eff_url
   where eff_url = baseUrl ++ "/tag/" ++ tg
 
 getTagsBookmarks    :: [Tag] -> DM [Post]
-getTagsBookmarks tgs = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getTagsBookmarks: " ++ s)
-
+getTagsBookmarks tgs = handleResult "getTagsBookmarks" eff_url
   where eff_url = baseUrl ++ "/tag/" ++ concat (intersperse "+" tgs)
 
 getPopularBookmarks :: DM [Post]
-getPopularBookmarks = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getPopularBookmarks: " ++ s)
-
+getPopularBookmarks = handleResult "getPopularBookmarks" eff_url
   where eff_url = baseUrl ++ "/popular"
 
 getTagPopularBookmarks :: Tag -> DM [Post]
-getTagPopularBookmarks tg = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getTagPopularBookmarks: " ++ s)
-
+getTagPopularBookmarks tg = handleResult "getTagPopularBookmarks" eff_url
   where eff_url = baseUrl ++ "/popular/" ++ tg
 
 getSiteAlerts       :: DM [Post]
-getSiteAlerts = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getTagPopularBookmarks: " ++ s)
-
+getSiteAlerts = handleResult "getSiteAlerts" eff_url
   where eff_url = baseUrl ++ "/alerts"
 
 getUserBookmarks    :: String -> DM [Post]
-getUserBookmarks usr = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getUserBookmarks: " ++ s)
-
+getUserBookmarks usr = handleResult "getUserBookmarks" eff_url
   where eff_url = baseUrl ++ '/':usr
 
 getUserTagBookmarks :: String -> Tag -> DM [Post]
-getUserTagBookmarks usr tg = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getUserTagBookmarks: " ++ s)
-
+getUserTagBookmarks usr tg = handleResult "getUserTagBookmarks" eff_url
   where eff_url = baseUrl ++ '/':usr++'/':tg
 
 getUserTaggedBookmarks :: String -> [Tag] -> DM [Post]
-getUserTaggedBookmarks usr tgs = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getUserTaggedBookmarks: " ++ s)
-
+getUserTaggedBookmarks usr tgs = handleResult "getUserTaggedBookmarks" eff_url
   where eff_url = baseUrl ++ '/':usr++'/':concat (intersperse "+" tgs)
 
 getUserInfo :: String -> DM [Post]
-getUserInfo usr = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getUserInfo: " ++ s)
-
+getUserInfo usr = handleResult "getUserInfo" eff_url
   where eff_url = baseUrl ++ "/userinfo/" ++ usr
 
 getUserPublicTags      :: String -> DM [Post]
-getUserPublicTags usr = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getUserPublicTags: " ++ s)
-
+getUserPublicTags usr = handleResult "getUserPublicTags" eff_url
   where eff_url = baseUrl ++ "/tags/" ++ usr
 
 
 getUserSubscriptions   :: String -> DM [Post]
-getUserSubscriptions usr = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getUserSubscriptions: " ++ s)
-
+getUserSubscriptions usr = handleResult "getUserSubscriptions" eff_url
   where eff_url = baseUrl ++ "/subscriptions/" ++ usr
 
 getUserInboxBookmarks  :: String -> String -> DM [Post]
-getUserInboxBookmarks usr k = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getUserInboxBookmarks: " ++ s)
-
+getUserInboxBookmarks usr k = handleResult "getUserInboxBookmarks" eff_url
   where eff_url = baseUrl ++ "/inbox/" ++ usr ++ "?private="++k
 
 getNetworkMemberBookmarks :: String -> DM [Post]
-getNetworkMemberBookmarks usr = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getNetworkMemberBookmarks: " ++ s)
-
+getNetworkMemberBookmarks usr = handleResult "getNetworkMemberBookmarks" eff_url
   where eff_url = baseUrl ++ "/network/" ++ usr
 
 getNetworkMemberTaggedBookmarks :: String -> [Tag] -> DM [Post]
-getNetworkMemberTaggedBookmarks usr tgs = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getNetworkMemberTaggedBookmarks: " ++ s)
-
-  where eff_url = baseUrl ++ "/network/" ++ usr ++ '/':concat (intersperse "+" tgs)
+getNetworkMemberTaggedBookmarks usr tgs = 
+  handleResult "getNetworkMemberTaggedBookmarks" eff_url
+   where eff_url = baseUrl ++ "/network/" ++ usr ++ '/':concat (intersperse "+" tgs)
 
 
 getNetworkMembers :: String -> DM [Post]
-getNetworkMembers usr = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getNetworkMembers: " ++ s)
-
+getNetworkMembers usr = handleResult "getNetworkMembers" eff_url
   where eff_url = baseUrl ++ "/networkmembers/" ++ usr
 
 getNetworkFans         :: String -> DM [Post]
-getNetworkFans usr = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getNetworkFans: " ++ s)
-
+getNetworkFans usr = handleResult "getNetworkFans" eff_url
   where eff_url = baseUrl ++ "/networkfans/" ++ usr
 
 getURLBookmarks  :: URLString -> DM [Post]
-getURLBookmarks turl = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getURLBookmarks: " ++ s)
-
+getURLBookmarks turl = handleResult "getURLBookmarks" eff_url
   where eff_url = baseUrl ++ "/url/" ++ hashUrl turl
 
 getURLSummary :: URLString -> DM URLDetails
-getURLSummary turl = do
-    ls <- buildUrl readContentsURL eff_url
-    case decodeStrict ls of
-      Ok s    -> return s
-      Error s -> liftIO $ ioError $ userError ("getURLSummary: " ++ s)
-
+getURLSummary turl = handleResult "getURLSummary" eff_url
   where eff_url = baseUrl ++ "/urlinfo/" ++ hashUrl turl
 
 hashUrl :: URLString -> String
