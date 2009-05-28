@@ -27,21 +27,23 @@ import Network.Delicious.Types
 
 -- | @readContentsURL@ fetches the content from the given URL, @u@.
 -- Via a standard, non-authenticated, @GET@.
-readContentsURL :: URLString -> IO String
-readContentsURL u = do
+readContentsURL :: String -> URLString -> IO String
+readContentsURL ua u = do
   let opts = [ CurlFollowLocation True
+	     , CurlUserAgent ua
 	     ]
   (_,xs) <- curlGetString u opts
   return xs
 
 -- | Like 'readContentsURL', but HTTP authenticated using the supplied
 -- credentials.
-readUserContentsURL :: User -> URLString -> IO String
-readUserContentsURL u url = do
+readUserContentsURL :: User -> String -> URLString -> IO String
+readUserContentsURL u ua url = do
   let opts = [ CurlHttpAuth [HttpAuthAny]
              , CurlUserPwd (userName u ++ 
 	                    case userPass u of {"" -> ""; p -> ':':p })
              , CurlFollowLocation True
+	     , CurlUserAgent ua
 	     ]
   (_,xs) <- curlGetString url opts
   return xs

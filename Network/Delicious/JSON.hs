@@ -89,10 +89,11 @@ getURLDetails uarl = getURLSummary uarl
 baseUrl :: String
 baseUrl = "http://feeds.delicious.com/v2/json"
 
-buildUrl :: (URLString -> IO a) -> URLString -> DM a
+buildUrl :: (String -> URLString -> IO a) -> URLString -> DM a
 buildUrl f u = do
   mbc <- getCount
-  liftIO (f (case mbc of { Nothing -> u ; Just c ->  u++"?count="++show c}))
+  ua  <- getUAgent
+  liftIO (f ua (case mbc of { Nothing -> u ; Just c ->  u++"?count="++show c}))
 
 handleResult :: JSON a => String -> URLString -> DM a
 handleResult loc u = do
@@ -290,7 +291,8 @@ getHtmlForTag hf mbTg = do
   let partial_url = build_query u c
   let base_url = fromMaybe feed_html_url (hf_delUrl hf)
   let eff_url = base_url ++ partial_url
-  liftIO $ readContentsURL eff_url
+  ua <- getUAgent
+  liftIO $ readContentsURL ua eff_url
  where
   build_query u c = consSlash (userName u) ++ (fromMaybe "" (fmap consSlash mbTg)) ++ '?':opts
     where

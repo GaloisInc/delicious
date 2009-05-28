@@ -25,9 +25,11 @@ module Network.Delicious.Types
        , catchDM   -- :: DM a -> (IOError -> DM a) -> DM a
        , withUser  -- :: User -> DM a -> DM a
        , withCount -- :: Int -> DM a -> DM a
+       , withUAgent -- :: String -> DM a -> DM a
        , getUser   -- :: DM User
        , getBase   -- :: DM URLString
        , getCount  -- :: DM (Maybe Int)
+       , getUAgent -- :: DM String
 
        , liftIO   -- :: IO a -> DM a
        , runDelic -- :: User -> URLString -> DM a -> IO a
@@ -60,6 +62,7 @@ data DMEnv
      { dmUser  :: User
      , dmBase  :: URLString
      , dmCount :: Maybe Int
+     , dmAgent :: String
      }
 
 data User
@@ -91,6 +94,9 @@ withUser u k = DM $ \ env -> (unDM k) env{dmUser=u}
 withCount :: Int -> DM a -> DM a
 withCount c k = DM $ \ env -> (unDM k) env{dmCount=Just c}
 
+withUAgent :: String -> DM a -> DM a
+withUAgent s k = DM $ \ env -> (unDM k) env{dmAgent=s}
+
 getUser :: DM User
 getUser = DM $ \ env -> return (dmUser env)
 
@@ -100,11 +106,18 @@ getCount = DM $ \ env -> return (dmCount env)
 getBase :: DM URLString
 getBase = DM $ \ env -> return (dmBase env)
 
+getUAgent :: DM URLString
+getUAgent = DM $ \ env -> return (dmAgent env)
+
 liftIO :: IO a -> DM a
 liftIO a = DM $ \ _ -> a
 
 runDelic :: User -> URLString -> DM a -> IO a
-runDelic u b dm = (unDM dm) DMEnv{dmUser=u,dmBase=b,dmCount=Nothing}
+runDelic u b dm = (unDM dm) DMEnv{dmUser=u,dmBase=b,dmCount=Nothing,dmAgent=defaultAgent}
+
+-- the default User-Agent: setting.
+defaultAgent :: String
+defaultAgent = "hs-delicious"
 
 del_base :: URLString
 del_base = "https://api.del.icio.us/v1"

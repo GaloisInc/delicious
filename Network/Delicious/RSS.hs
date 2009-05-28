@@ -96,10 +96,11 @@ b_urlinfo_url :: {-URL-}String
 b_urlinfo_url = deli_base ++ "/rss/urlinfo/"
 -}
 
-buildUrl :: (URLString -> IO a) -> URLString -> DM a
+buildUrl :: (String -> URLString -> IO a) -> URLString -> DM a
 buildUrl f u = do
   mbc <- getCount
-  liftIO (f (case mbc of { Nothing -> u ; Just c ->  u++"?count="++show c}))
+  ua <- getUAgent
+  liftIO (f ua (case mbc of { Nothing -> u ; Just c ->  u++"?count="++show c}))
 
 performCall :: String -> URLString -> DM [Post]
 performCall loc u = do

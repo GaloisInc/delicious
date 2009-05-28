@@ -50,7 +50,8 @@ restReq cmd opts = do
   b      <- getBase
   u      <- getUser
   let effUrl = b ++ '/':cmd ++ tlOpts opts
-  xs <- liftIO $ readUserContentsURL u effUrl
+  ua <- getUAgent
+  xs <- liftIO $ readUserContentsURL u ua effUrl
   return (fromMaybe (Right xs) $ fmap Left $ parseXMLDoc xs)
  where
   tlOpts [] = ""
