@@ -4,7 +4,7 @@
 -- Copyright   : (c) Galois, Inc. 2008
 -- License     : BSD3
 --
--- Maintainer  : Sigbjorn Finne <sof@galois.com>
+-- Maintainer  : Sigbjorn Finne <sigbjorn.finne@gmail.com>
 -- Stability   : provisional
 -- Portability : portable
 --

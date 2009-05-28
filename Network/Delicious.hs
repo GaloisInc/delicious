@@ -1,10 +1,10 @@
 --------------------------------------------------------------------
 -- |
 -- Module    : Network.Delicious
--- Copyright : (c) Galois, Inc. 2008
+-- Copyright : (c) Sigbjorn Finne, 2008-
 -- License   : BSD3
 --
--- Maintainer: Sigbjorn Finne <sof@galois.com>
+-- Maintainer: Sigbjorn Finne <sigbjorn.finne@gmail.com>
 -- Stability : provisional
 -- Portability:
 --
